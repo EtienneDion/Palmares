@@ -1,0 +1,55 @@
+<% layout('layout') -%>
+<% if (!user) { %>
+
+	<h2>Welcome! Please log in.</h2>
+
+	<% for(var i=0; i<data.length; i++) {%>
+        <div class="box">
+            <h3><%= data[i].name %></h3>
+            <ul>
+                <% for(var y=0; y<data[i].tools.length; y++) {%>
+                   <li><%= data[i].tools[y].name %></li>
+                <% } %>
+            </ul>
+        </div>
+    <% } %>
+
+<% } else { %>
+
+	<h2>Hello, <%= user.username %>.</h2>
+    <% for(var i=0; i<data.length; i++) {%>
+        <div class="box" data-cat="<%= data[i].id %>">
+            <h3><%= data[i].name %></h3>
+            <ul>
+                <% for(var y=0; y<data[i].tools.length; y++) {%>
+                   <li><%= data[i].tools[y].name %></li>
+                <% } %>
+            </ul>
+            <form class="addtool">
+                <h4>Add Tool :</h4>
+                <div class="field">
+                    <label for="tool_name_<%= data[i].id %>">Name : </label>
+                    <input name="tool_name" id="tool_name_<%= data[i].id %>" data-id="name" type="text" value=""/>
+                </div>
+                <div class="field">
+                    <label for="tool_url_<%= data[i].id %>">URL or Repo : </label>
+                    <input name="tool_url" id="tool_url_<%= data[i].id %>" data-id="url" type="text" value=""/>
+                </div>
+                <input type="submit"/>
+            </form>
+        </div>
+    <% } %>
+
+    <br/>
+    <form class="addcategorie">
+        <h4>Add Categorie</h4>
+        <div class="field">
+            <label for="categorie_name">Name : </label>
+            <input name="categorie_name" id="categorie_name" data-id="name" type="text" value=""/>
+        </div>
+         <input type="submit"/>
+    </form>
+
+    <div id="resultat"></div>
+<% } %>
+

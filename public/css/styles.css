@@ -1,0 +1,3 @@
+.field.error label{color:red;}
+.field.error input{border:1px solid red;}
+.field.error .errorMsg{color:red;}

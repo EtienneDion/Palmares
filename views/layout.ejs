@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Passport</title>
+		<link rel="stylesheet" type="text/css" href="/css/styles.css">
+
+
+		<script src="/js/jquery-1.8.2.js"></script>
+		<script src="/js/jquery.enhance.js"></script>
+		<script src="/js/script.js"></script>
+	</head>
+	<body>
+		<% if (!user) { %>
+        <div class="enhance" data-enhance="notConnected">
+			<p>
+			    <a href="/">Home</a> |
+			    <a href="/login">Log In</a> or Log in with :
+			    <a href="/auth/twitter">Twitter</a> |
+                <a href="/auth/facebook">Facebook</a> |
+                <a href="/auth/google">Google</a> |
+                <a href="/auth/linkedin">LinkedIn</a> |
+                <a href="/auth/github">GitHub</a>
+			</p>
+		<% } else { %>
+		<div class="enhance" data-enhance="connected">
+			<p>
+			<a href="/">Home</a> | 
+			<a href="/account">Account</a> | 
+			<a href="/logout">Log Out</a>
+			</p>
+		<% } %>
+		<%- body %>
+		</div>
+	</body>
+</html>
