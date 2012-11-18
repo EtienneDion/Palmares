@@ -8,9 +8,10 @@ module.exports = function(app){
         loginPost:loginPost,
         authRedirect:authRedirect,
         logOut:logOut,
-        ajaxCategorie:ajaxCategorie,
-        ajaxTool:ajaxTool,
-        ajaxVotes:ajaxVotes
+        ajaxAddCategorie:ajaxAddCategorie,
+        ajaxAddTool:ajaxAddTool,
+        ajaxVotes:ajaxVotes,
+        ajaxRefreshCat:ajaxRefreshCat
     };
 
     function index(req, res, next){
@@ -38,7 +39,7 @@ module.exports = function(app){
         res.redirect('/');
     }
 
-    function ajaxCategorie(req, res, next){
+    function ajaxAddCategorie(req, res, next){
         var name = req.body.name;
         if(name !== "" && name !== undefined && name !== null ){
 
@@ -52,10 +53,10 @@ module.exports = function(app){
         } else {
             res.render('ajax', { result: "error" });
         }
-
+        app.data = app.functions.getData();
     }
 
-    function ajaxTool(req, res, next){
+    function ajaxAddTool(req, res, next){
         var name = req.body.name;
         var url = req.body.url;
         var cat = req.body.cat;
@@ -73,12 +74,51 @@ module.exports = function(app){
         } else {
             res.render('ajax', { result: "error" });
         }
-
+        app.data = app.functions.getData();
     }
 
     function ajaxVotes(req, res, next){
+
+        var userId = req.user.id;
+        var order = req.body.order;
+        var cat = req.body.cat;
+
+        app.votes.remove({ cat:parseInt(cat), user:userId});
+
+        if(cat !== "" && cat !== undefined && cat !== null  ){
+            for(var i=0; i < order.length; i++ ){
+                console.log("{ id:"+ order[i].id
+                    +",pos:"+ i+1
+                    +",cat:"+ cat
+                    +",user:"+ userId
+                    +"}");
+
+                    app.votes.insert({
+                        id: parseInt(order[i].id),
+                        pos: i+1,
+                        cat:parseInt(cat),
+                        user:userId
+                    });
+
+            }
+            res.render('ajax', { result: "ok" });
+        }  else {
+            res.render('ajax', { result: "error" });
+        }
+        app.data = app.functions.getData();
     }
 
+    function ajaxRefreshCat(req, res, next){
 
+        var cat = req.body.cat;
 
+        app.data = app.functions.getData();
+
+        // TODO : refactoring without timeout
+        setTimeout(function(){
+
+            res.render('cat', {   data: app.data, cat:cat-1    });
+
+        },600);
+    }
 };

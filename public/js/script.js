@@ -1,50 +1,90 @@
 
 var palmares = (function () {
 
+    var doAjax = function (path, values, next) {
 
-    var doAjax = function (path, categorie, values) {
-        values = values.slice(0, -1);
-        console.log("/// "+values);
-        if (categorie !== null){
-            categorie = ',"cat":'+categorie;
-        } else {
-            categorie = '';
-        }
-        var params = $.parseJSON('{'+ values + categorie+'}');
+        console.log(values);
+        var params = JSON.stringify( values );
         console.log(params);
         $.ajax({
             type: 'POST',
             url: '/ajax/'+path,
             dataType: "json",
-            data: params,
+            data: values,
             success:
                 function(data) {
                     $('#resultat').html(data);
+                    next;
                 }
         });
 
     };
+    var getCategorie = function(cat){
 
-    // TODO : Need refactoring .... pass a real array not strings...
-    var ajaxCategorie = function (fields) {
-        var values ="";
-        $(fields).each(function(){
-            values = values + '"' +$(this).data("id") +'":"'+ $(this).val() +'",';
+        $.ajax({
+            type: 'POST',
+            url: '/ajax/get_categories',
+            dataType: "html",
+            data: cat,
+            success:
+                function(data) {
+
+                    $(".box[data-cat="+cat.cat+"]").html(data);
+                    $(".box[data-cat="+cat.cat+"]").addClass("enhance");
+                    $(".box[data-cat="+cat.cat+"]").data("enhance", "connected");
+                    $(".box[data-cat="+cat.cat+"]").clearEnhance();
+                    $(".box[data-cat="+cat.cat+"]").enhance();
+                }
         });
-
-        doAjax("categories", null, values)
     };
-    // TODO : Need refactoring .... pass a real array not strings...
-    var ajaxTool = function (fields) {
-        var values ="";
-        var categorie =null;
-        if(fields.length){
-            categorie = $(fields[0]).parents(".box").data("cat");
-        }
-        $(fields).each(function(){
-            values = values + '"' + $(this).data("id") +'":"'+ $(this).val() +'",';
+
+    var sortTools = function(){
+
+        yepnope({
+            test: Modernizr.draganddrop,
+            yep: '/js/jquery.sortable.js',
+            nope: '/js/jquery-ui-1.9.1.custom.min.js',
+            complete: function() {
+
+                var votes = {};
+                $('.sortable').sortable({ handle: '.handle' }).bind('sortupdate', function() {
+
+                    votes["cat"] = $(this).parents(".box").data("cat");
+                    var order = [];
+
+                    var $lis = $(this).find("li");
+                    $lis.each(function(){
+
+                        order.push({id:$(this).data("id")});
+
+                    });
+                    votes["order"] = order;
+                    doAjax("sort", votes);
+                });
+            }
         });
-        doAjax("tools", categorie, values)
+
+    };
+
+    var ajaxCategorie = function (fields) {
+        var values = {};
+        $(fields).each(function(){
+            values[ $(this).data("id") ] =  $(this).val();
+        });
+
+        doAjax("add_categories", values, null);
+    };
+
+    var ajaxTool = function (fields) {
+        var values = {};
+        $(fields).each(function(){
+            values[ $(this).data("id") ] =  $(this).val();
+        });
+        values["cat"] = $(fields[0]).parents(".box").data("cat");
+
+        doAjax("add_tools", values, getCategorie({cat:values["cat"]}));
+
+
     };
 
     var validate = function ($form, next){
@@ -93,10 +133,15 @@ var palmares = (function () {
     return {
         handler:{
             addCategorie: addCategorie,
-            addTool: addTool
+            addTool: addTool,
+            sortTools: sortTools,
+            getCategorie: getCategorie
         }
     }
 })();
+
+
+
 
 $.enhance(palmares.handler.addCategorie, {
     id: "ajaxAddCategorie",
@@ -109,6 +154,14 @@ $.enhance(palmares.handler.addTool, {
     title: "adding tools",
     group: "connected"
 });
+
+$.enhance(palmares.handler.sortTools, {
+    id: "sortTools",
+    title: "Sort Tools",
+    group: "connected"
+});
+
+
 
 $(function() {
 

@@ -1,4 +1,4 @@
-module.exports = function(app, configs, users, functions){
+module.exports = function(app, configs, bd){
 
     var passport = require('passport')
     , LocalStrategy = require('passport-local').Strategy
@@ -19,7 +19,7 @@ module.exports = function(app, configs, users, functions){
     });
 
     passport.deserializeUser(function(id, done) {
-        functions.findById(id, function (err, user) {
+        app.functions.findById(id, function (err, user) {
             done(err, user);
         }, done);
     });
@@ -38,7 +38,7 @@ module.exports = function(app, configs, users, functions){
                 // username, or the password is not correct, set the user to `false` to
                 // indicate failure and set a flash message.  Otherwise, return the
                 // authenticated `user`.
-                functions.findByUsername(username, function(err, user) {
+                app.functions.findByUsername(username, function(err, user) {
                     if (err) { return done(err); }
                     if (!user) { return done(null, false, { message: 'Unknown user ' + username }); }
                     if (user.password != password) { return done(null, false, { message: 'Invalid password' }); }
@@ -62,7 +62,7 @@ module.exports = function(app, configs, users, functions){
                 // to associate the Twitter account with a user record in your database,
                 // and return that user instead
 
-                users.insert({
+                app.users.insert({
                     id: profile.id,
                     type: "twitter",
                     username: profile.username,
@@ -96,7 +96,7 @@ module.exports = function(app, configs, users, functions){
                 // to associate the Facebook account with a user record in your database,
                 // and return that user instead.
 
-                users.insert({
+                app.users.insert({
                     id: profile.id,
                     type: "facebook",
                     username: profile.username,
@@ -124,7 +124,7 @@ module.exports = function(app, configs, users, functions){
                 // and return that user instead.
                 profile.id = identifier;
 
-                users.insert({
+                app.users.insert({
                     id: profile.id,
                     type: "google",
                     username: profile.displayName,
@@ -155,7 +155,7 @@ module.exports = function(app, configs, users, functions){
                 // to associate the LinkedIn account with a user record in your database,
                 // and return that user instead.
 
-                users.insert({
+                app.users.insert({
                     id: profile.id,
                     type: "linkedin",
                     username: profile.displayName,
@@ -186,7 +186,7 @@ module.exports = function(app, configs, users, functions){
                 // to associate the GitHub account with a user record in your database,
                 // and return that user instead.
                 console.log(profile);
-                users.insert({
+                app.users.insert({
                     id: profile.id,
                     type: "github",
                     username: profile.username,

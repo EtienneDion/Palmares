@@ -1,3 +1,4 @@
 .field.error label{color:red;}
 .field.error input{border:1px solid red;}
 .field.error .errorMsg{color:red;}
+.list{width:310px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}.list li{list-style:none;border:1px solid #CCC;background:#F6F6F6;color:#1C94C4;margin:5px;padding:5px;height:22px;line-height:1.4em;}.list li .handle{cursor:move;}

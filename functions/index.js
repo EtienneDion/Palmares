@@ -1,11 +1,12 @@
-module.exports = function(app){
+module.exports = function(app, bd){
 
     return {
         //auth functions
         findById:findById,
         findByUsername:findByUsername,
         sortByProp:sortByProp,
-        ensureAuthenticated:ensureAuthenticated
+        ensureAuthenticated:ensureAuthenticated,
+        getData:getData
     };
 
     //auth functions
@@ -45,4 +46,61 @@ module.exports = function(app){
         if (req.isAuthenticated()) { return next(); }
         res.redirect('/login')
     }
+
+    // TODO: need refactoring without timeout
+    function getData( ) {
+
+        console.log("allo");
+        app.tools = bd.collection("tools");
+        app.categories = bd.collection("categories");
+        app.votes = bd.collection("votes");
+        var categoriesArray = [];
+        var categoriesList = app.categories.find();
+
+
+
+        categoriesList.forEach(function(x){
+
+            var toolsArray = [];
+            var toolsList = app.tools.find({ categorie: x.id });
+            var nbOfTools = 0;
+            var currentTool=0;
+
+            toolsList.forEach(function(y){
+                nbOfTools++;
+            }, function(){
+                toolsList = app.tools.find({ categorie: x.id });
+                toolsList.forEach(function(y){
+
+                    var note = 0,
+                        votesList = app.votes.find({ id: y.id });
+
+                    votesList.forEach(function(z){
+
+                        var tempNote = nbOfTools+1 - z.pos;
+                        note = note + tempNote;
+
+                    }, function(){
+                        toolsArray.push({name:y.name, id:y.id, note: note });
+
+                    });
+
+                },function(){
+                    setTimeout(function(){
+
+                        sortByProp(toolsArray, "note");
+
+                        categoriesArray.push({name:x.name, id:x.id, tools: toolsArray });
+
+                    },300);
+                });
+            });
+
+        });
+        console.log("Listing:",categoriesArray);
+        return categoriesArray;
+
+    }
+
+
 }

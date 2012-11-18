@@ -6,9 +6,9 @@
 	<% for(var i=0; i<data.length; i++) {%>
         <div class="box">
             <h3><%= data[i].name %></h3>
-            <ul>
+            <ul class="list">
                 <% for(var y=0; y<data[i].tools.length; y++) {%>
-                   <li><%= data[i].tools[y].name %></li>
+                   <li><span class="handle">&nbsp;&nbsp;</span> <%= data[i].tools[y].name %></li>
                 <% } %>
             </ul>
         </div>
@@ -20,9 +20,9 @@
     <% for(var i=0; i<data.length; i++) {%>
         <div class="box" data-cat="<%= data[i].id %>">
             <h3><%= data[i].name %></h3>
-            <ul>
+            <ul class="sortable list">
                 <% for(var y=0; y<data[i].tools.length; y++) {%>
-                   <li><%= data[i].tools[y].name %></li>
+                   <li data-id="<%= data[i].tools[y].id %>"><span class="handle">::</span> <%= data[i].tools[y].name %></li>
                 <% } %>
             </ul>
             <form class="addtool">

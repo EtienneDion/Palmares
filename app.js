@@ -14,57 +14,18 @@ var express = require('express')
 bd = mongolian.db(configs.DB);
 bd.auth(configs.DB_USER, configs.DB_PASS);
 
-app.tools = bd.collection("tools");
-app.categories = bd.collection("categories");
+
 var users = bd.collection("users");
-app.votes = bd.collection("votes");
+app.users = users;
 
 // functions
-var functions = require('./functions')(app);
+app.functions = require('./functions')(app, bd);
 // auth
-var passport = require('./passport')(app, configs, users, functions);
+var passport = require('./passport')(app, configs);
 
 
-var categoriesArray = [];
-var categoriesList = app.categories.find();
 
-categoriesList.forEach(function(x){
-
-    var toolsArray = [];
-    var toolsList = app.tools.find({ categorie: x.id });
-    var nbOfTools = 0;
-
-    toolsList.forEach(function(y){
-        nbOfTools++;
-    });
-
-    toolsList.forEach(function(y){
-
-        var note = 0,
-        votesList = app.votes.find({ id: y.id });
-        votesList.forEach(function(z){
-
-            var tempNote = nbOfTools+1 - z.pos;
-            note = note + tempNote;
-
-        }, function(){
-            toolsArray.push({name:y.name, id:y.id, note: note });
-        });
-
-    },function(){
-        setTimeout(function(){
-
-            functions.sortByProp(toolsArray, "note");
-            console.log(toolsArray);
-            categoriesArray.push({name:x.name, id:x.id, tools: toolsArray });
-
-        },200);
-    });
-
-});
-
-app.data = categoriesArray;
-app.users = users;
+app.data = app.functions.getData();
 
 
 
@@ -94,12 +55,18 @@ app.configure(function() {
     app.use(express.errorHandler({ dumpExceptions: true, showStack: true }))
 });
 
+
+
+
 var routes = require('./routes')(app);
 
+// normal routes
 app.get('/', routes.index);
-app.get('/account', functions.ensureAuthenticated, routes.account);
-app.get('/login', routes.logIn);
+app.get('/account', app.functions.ensureAuthenticated, routes.account);
 app.post('/', passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }), routes.indexPost);
+
+// login
+app.get('/login', routes.logIn);
 app.post('/login', passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }),routes.loginPost);
 app.get('/auth/twitter', passport.authenticate('twitter'), routes.authRedirect);
 app.get('/auth/twitter/callback',passport.authenticate('twitter', { failureRedirect: '/', failureFlash: true }), routes.indexPost);
@@ -111,11 +78,14 @@ app.get('/auth/linkedin', passport.authenticate('linkedin'), routes.authRedirect
 app.get('/auth/linkedin/callback', passport.authenticate('linkedin', { failureRedirect: '/login' }), routes.indexPost);
 app.get('/auth/github', passport.authenticate('github'), routes.authRedirect);
 app.get('/auth/github/callback', passport.authenticate('github', { failureRedirect: '/login' }), routes.indexPost);
+//logout
 app.get('/logout', routes.logOut);
 
-app.post('/ajax/categories', functions.ensureAuthenticated, routes.ajaxCategorie);
-app.post('/ajax/tools', functions.ensureAuthenticated, routes.ajaxTool);
-app.post('/ajax/votes', functions.ensureAuthenticated, routes.ajaxVotes);
+//ajax
+app.post('/ajax/add_categories', app.functions.ensureAuthenticated, routes.ajaxAddCategorie);
+app.post('/ajax/add_tools', app.functions.ensureAuthenticated, routes.ajaxAddTool);
+app.post('/ajax/sort', app.functions.ensureAuthenticated, routes.ajaxVotes);
+app.post('/ajax/get_categories', app.functions.ensureAuthenticated, routes.ajaxRefreshCat);
 
 app.listen(3000);
 
