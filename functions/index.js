@@ -46,61 +46,74 @@ module.exports = function(app, bd){
         if (req.isAuthenticated()) { return next(); }
         res.redirect('/login')
     }
-
-    // TODO: need refactoring without timeout
-    function getData( ) {
-
-        console.log("allo");
+    function getData( next ) {
         app.tools = bd.collection("tools");
         app.categories = bd.collection("categories");
         app.votes = bd.collection("votes");
         var categoriesArray = [];
         var categoriesList = app.categories.find();
 
-
-
         categoriesList.forEach(function(x){
+            categoriesArray.push({name:x.name, id:x.id });
+        }, function(){
 
             var toolsArray = [];
-            var toolsList = app.tools.find({ categorie: x.id });
+            var toolsList = app.tools.find();
             var nbOfTools = 0;
-            var currentTool=0;
-
             toolsList.forEach(function(y){
-                nbOfTools++;
+                toolsArray.push({name:y.name, id:y.id, cat:y.categorie });
             }, function(){
-                toolsList = app.tools.find({ categorie: x.id });
-                toolsList.forEach(function(y){
+                var note = 0,
+                votesArray = [];
+                votesList = app.votes.find();
 
-                    var note = 0,
-                        votesList = app.votes.find({ id: y.id });
+                votesList.forEach(function(z){
 
-                    votesList.forEach(function(z){
+                    votesArray.push({ id:z.id, pos: z.pos });
+                }, function(){
 
-                        var tempNote = nbOfTools+1 - z.pos;
-                        note = note + tempNote;
+                    for(var i=0;i < categoriesArray.length; i++){
+                        var currentTools =[];
+                        var nbOfTools = 0;
+                        //console.log("i:", i);
+                        for(var j=0;j < toolsArray.length; j++){
 
-                    }, function(){
-                        toolsArray.push({name:y.name, id:y.id, note: note });
+                            if(toolsArray[j].cat === categoriesArray[i].id){
+                                nbOfTools++;
+                            }
+                        }
 
-                    });
+                        for(var l=0;l < toolsArray.length; l++){
 
-                },function(){
-                    setTimeout(function(){
 
-                        sortByProp(toolsArray, "note");
+                            if(toolsArray[l].cat === categoriesArray[i].id){
 
-                        categoriesArray.push({name:x.name, id:x.id, tools: toolsArray });
+                                var note=0;
 
-                    },300);
+                                for(var m=0;m < votesArray.length; m++){
+                                    if(toolsArray[l].id === votesArray[m].id){
+                                        var tempNote = nbOfTools+1 - votesArray[m].pos;
+                                        note = note + tempNote;
+                                    }
+                                }
+                                toolsArray[l].note = note;
+                                currentTools.push(toolsArray[l]);
+                            }
+                        }
+
+                        categoriesArray[i].tools = currentTools;
+
+                    }
+
+                    app.data = categoriesArray;
+
+                    next();
+
+
                 });
             });
-
         });
-        console.log("Listing:",categoriesArray);
-        return categoriesArray;
 
     }
-
 
 }

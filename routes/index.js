@@ -15,7 +15,7 @@ module.exports = function(app){
     };
 
     function index(req, res, next){
-        console.log(app.data);
+        console.log("data", app.data);
         res.render('index', {   user: req.user, data: app.data    });
     }
     function indexPost(req, res, next) {
@@ -48,12 +48,17 @@ module.exports = function(app){
                     id: count+1,
                     name: name
                 });
-                res.render('ajax', { result: "ok" });
+                var next = function(){
+                    res.render('ajax', { result: "ok" });
+                };
+                app.functions.getData(next);
+
+
             });
         } else {
             res.render('ajax', { result: "error" });
         }
-        app.data = app.functions.getData();
+
     }
 
     function ajaxAddTool(req, res, next){
@@ -69,12 +74,15 @@ module.exports = function(app){
                     url:url,
                     categorie:parseInt(cat)
                 });
-                res.render('ajax', { result: "ok" });
+                var next = function(){
+                    res.render('ajax', { result: "ok" });
+                };
+                app.functions.getData(next);
             });
         } else {
             res.render('ajax', { result: "error" });
         }
-        app.data = app.functions.getData();
+
     }
 
     function ajaxVotes(req, res, next){
@@ -101,24 +109,24 @@ module.exports = function(app){
                     });
 
             }
-            res.render('ajax', { result: "ok" });
+            var next = function(){
+                res.render('ajax', { result: "ok" });
+            };
+            app.functions.getData(next);
         }  else {
             res.render('ajax', { result: "error" });
         }
-        app.data = app.functions.getData();
+
     }
 
     function ajaxRefreshCat(req, res, next){
 
         var cat = req.body.cat;
 
-        app.data = app.functions.getData();
-
-        // TODO : refactoring without timeout
-        setTimeout(function(){
-
+        var next = function(){
             res.render('cat', {   data: app.data, cat:cat-1    });
+        };
+        app.functions.getData(next);
 
-        },600);
     }
 };

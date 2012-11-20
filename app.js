@@ -23,9 +23,9 @@ app.functions = require('./functions')(app, bd);
 // auth
 var passport = require('./passport')(app, configs);
 
+var nullFunction = function(){};
 
-
-app.data = app.functions.getData();
+app.functions.getData(nullFunction);
 
 
 
