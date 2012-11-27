@@ -14,9 +14,13 @@ var palmares = (function () {
             success:
                 function(data) {
                     $('#resultat').html(data);
-                    console.log("addTool");
-                    if(refreshCat !== null){
-                        getCategorie({cat:refreshCat})
+
+                    if (refreshCat === "last"){
+                        getCategorie({cat:data.cat});
+                    } else {
+                        if(refreshCat !== null){
+                            getCategorie({cat:refreshCat})
+                        }
                     }
 
                 }
@@ -32,14 +36,21 @@ var palmares = (function () {
             data: cat,
             success:
                 function(data) {
-
-                    $(".box[data-cat="+cat.cat+"]").html(data);
-                    $(".box[data-cat="+cat.cat+"]").addClass("enhance");
-                    $(".box[data-cat="+cat.cat+"]").data("enhance", "connected");
-                    $(".box[data-cat="+cat.cat+"]").clearEnhance();
-                    $(".box[data-cat="+cat.cat+"]").enhance();
-
-                    console.log("getCategories");
+                    if( $(".box[data-cat="+cat.cat+"]").length ){
+                        $(".box[data-cat="+cat.cat+"]").html(data);
+                        $(".box[data-cat="+cat.cat+"]").addClass("enhance");
+                        $(".box[data-cat="+cat.cat+"]").data("enhance", "connected");
+                        $(".box[data-cat="+cat.cat+"]").clearEnhance();
+                        $(".box[data-cat="+cat.cat+"]").enhance();
+                    } else {
+                        console.log($("#container").find(".box").filter(":last"), cat.cat);
+                        $("#container").find(".box").filter(":last").after("<div class='box' data-cat='"+cat.cat+"'></div>");
+                        $(".box[data-cat="+cat.cat+"]").html(data);
+                        $(".box[data-cat="+cat.cat+"]").addClass("enhance");
+                        $(".box[data-cat="+cat.cat+"]").data("enhance", "connected");
+                        $(".box[data-cat="+cat.cat+"]").clearEnhance();
+                        $(".box[data-cat="+cat.cat+"]").enhance();
+                    }
 
                 }
         });
@@ -79,7 +90,7 @@ var palmares = (function () {
             values[ $(this).data("id") ] =  $(this).val();
         });
 
-        doAjax("add_categories", values, null);
+        doAjax("add_categories", values, "last");
     };
 
     var ajaxTool = function (fields) {
@@ -88,7 +99,7 @@ var palmares = (function () {
             values[ $(this).data("id") ] =  $(this).val();
         });
         values["cat"] = $(fields[0]).parents(".box").data("cat");
-        console.log("call");
+
         doAjax("add_tools", values, values["cat"]);
 
 

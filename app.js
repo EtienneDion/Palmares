@@ -23,10 +23,6 @@ app.functions = require('./functions')(app, bd);
 // auth
 var passport = require('./passport')(app, configs);
 
-var nullFunction = function(){};
-
-app.functions.getData(nullFunction);
-
 
 
 // configure Express

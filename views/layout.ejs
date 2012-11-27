@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<% if (!user) { %>
-        <div class="enhance" data-enhance="notConnected">
+        <div id="container" class="enhance" data-enhance="notConnected">
 			<p>
 			    <a href="/">Home</a> |
 			    <a href="/login">Log In</a> or Log in with :
@@ -20,7 +20,7 @@
                 <a href="/auth/github">GitHub</a>
 			</p>
 		<% } else { %>
-		<div class="enhance" data-enhance="connected">
+		<div id="container" class="enhance" data-enhance="connected">
 			<p>
 			<a href="/">Home</a> | 
 			<a href="/account">Account</a> | 

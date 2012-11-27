@@ -6,9 +6,19 @@ module.exports = function(app, bd){
         findByUsername:findByUsername,
         sortByProp:sortByProp,
         ensureAuthenticated:ensureAuthenticated,
-        getData:getData
+        getData:getData,
+        getUserId:getUserId
     };
 
+    function getUserId(user){
+
+        var userId = null;
+        if(user !== undefined ){
+            userId = user.id;
+        }
+
+        return userId;
+    }
     //auth functions
     function findById(id, fn, done) {
         var type="";
@@ -46,26 +56,36 @@ module.exports = function(app, bd){
         if (req.isAuthenticated()) { return next(); }
         res.redirect('/login')
     }
-    function getData( next ) {
+
+    function getData( userId, next ) {
         app.tools = bd.collection("tools");
         app.categories = bd.collection("categories");
         app.votes = bd.collection("votes");
         var categoriesArray = [];
+
         var categoriesList = app.categories.find();
+        var toolsList = app.tools.find();
+        var votesList;
+        if(userId !== null){
+            votesList = app.votes.find({ user:userId });
+        } else {
+            votesList = app.votes.find();
+        }
+
 
         categoriesList.forEach(function(x){
             categoriesArray.push({name:x.name, id:x.id });
         }, function(){
 
             var toolsArray = [];
-            var toolsList = app.tools.find();
+
             var nbOfTools = 0;
             toolsList.forEach(function(y){
                 toolsArray.push({name:y.name, id:y.id, cat:y.categorie });
             }, function(){
                 var note = 0,
                 votesArray = [];
-                votesList = app.votes.find();
+
 
                 votesList.forEach(function(z){
 
@@ -97,14 +117,17 @@ module.exports = function(app, bd){
                                     }
                                 }
                                 toolsArray[l].note = note;
+
                                 currentTools.push(toolsArray[l]);
                             }
                         }
 
+                        currentTools = sortByProp(currentTools, "note");
+
                         categoriesArray[i].tools = currentTools;
 
                     }
-
+                   // console.log(categoriesArray);
                     app.data = categoriesArray;
 
                     next();

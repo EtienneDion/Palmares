@@ -1,7 +1,8 @@
 module.exports = function(app){
 
 
-    return {index:index,
+    return {
+        index:index,
         indexPost:indexPost,
         account:account,
         logIn:logIn,
@@ -15,8 +16,17 @@ module.exports = function(app){
     };
 
     function index(req, res, next){
-        console.log("data", app.data);
-        res.render('index', {   user: req.user, data: app.data    });
+        //console.log("data", app.data);
+
+        var next = function(){
+            res.render('index', {   user: req.user, data: app.data    });
+        };
+
+        var userId = app.functions.getUserId(req.user);
+        console.log("user : "+userId);
+        app.functions.getData(userId, next);
+
+
     }
     function indexPost(req, res, next) {
         res.redirect('/');
@@ -49,14 +59,18 @@ module.exports = function(app){
                     name: name
                 });
                 var next = function(){
-                    res.render('ajax', { result: "ok" });
+                    var cat = count+1;
+                    res.render('ajax', { result: "ok", cat:cat });
                 };
-                app.functions.getData(next);
+
+                var userId = app.functions.getUserId(req.user);
+                console.log("user : "+userId);
+                app.functions.getData(userId, next);
 
 
             });
         } else {
-            res.render('ajax', { result: "error" });
+            res.render('ajax', { result: "error", cat:null });
         }
 
     }
@@ -75,12 +89,15 @@ module.exports = function(app){
                     categorie:parseInt(cat)
                 });
                 var next = function(){
-                    res.render('ajax', { result: "ok" });
+                    res.render('ajax', { result: "ok", cat:null });
                 };
-                app.functions.getData(next);
+
+                var userId = app.functions.getUserId(req.user);
+                console.log("user : "+userId);
+                app.functions.getData(userId, next);
             });
         } else {
-            res.render('ajax', { result: "error" });
+            res.render('ajax', { result: "error", cat:null });
         }
 
     }
@@ -96,25 +113,26 @@ module.exports = function(app){
         if(cat !== "" && cat !== undefined && cat !== null  ){
             for(var i=0; i < order.length; i++ ){
                 console.log("{ id:"+ order[i].id
-                    +",pos:"+ i+1
+                    +",pos:"+ (i+1)
                     +",cat:"+ cat
                     +",user:"+ userId
                     +"}");
 
                     app.votes.insert({
                         id: parseInt(order[i].id),
-                        pos: i+1,
+                        pos: (i+1),
                         cat:parseInt(cat),
                         user:userId
                     });
 
             }
             var next = function(){
-                res.render('ajax', { result: "ok" });
+                res.render('ajax', { result: "ok", cat:null });
             };
-            app.functions.getData(next);
+            console.log("user : "+userId);
+            app.functions.getData(userId, next);
         }  else {
-            res.render('ajax', { result: "error" });
+            res.render('ajax', { result: "error", cat:null });
         }
 
     }
@@ -126,7 +144,11 @@ module.exports = function(app){
         var next = function(){
             res.render('cat', {   data: app.data, cat:cat-1    });
         };
-        app.functions.getData(next);
+
+
+        var userId = app.functions.getUserId(req.user);
+        console.log("user : "+userId);
+        app.functions.getData(userId,next);
 
     }
 };
