@@ -49,7 +49,7 @@ module.exports = function(app){
         res.render('account', { user: req.user, view: null  });
     }
     function logIn(req, res, next){
-        res.render('login', { user: req.user, message: req.flash('error'), view: null });
+        res.render('admin', { user: req.user, message: req.flash('error'), view: null });
     }
     function loginPost(req, res, next){
         res.redirect('/');

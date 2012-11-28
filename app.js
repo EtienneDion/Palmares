@@ -60,11 +60,11 @@ var routes = require('./routes')(app);
 app.get('/', routes.index);
 app.get('/palmares', routes.palmares);
 app.get('/account', app.functions.ensureAuthenticated, routes.account);
-app.post('/', passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }), routes.indexPost);
+app.post('/', passport.authenticate('local', { failureRedirect: '/admin', failureFlash: true }), routes.indexPost);
 
 // login
-app.get('/login', routes.logIn);
-app.post('/login', passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }),routes.loginPost);
+app.get('/admin', routes.logIn);
+app.post('/admin', passport.authenticate('local', { failureRedirect: '/admin', failureFlash: true }),routes.loginPost);
 app.get('/auth/twitter', passport.authenticate('twitter'), routes.authRedirect);
 app.get('/auth/twitter/callback',passport.authenticate('twitter', { failureRedirect: '/', failureFlash: true }), routes.indexPost);
 app.get('/auth/facebook', passport.authenticate('facebook'), routes.authRedirect);

@@ -39,16 +39,20 @@ var palmares = (function () {
                     if( $(".box[data-cat="+cat.cat+"]").length ){
                         $(".box[data-cat="+cat.cat+"]").html(data);
                         $(".box[data-cat="+cat.cat+"]").addClass("enhance");
-                        $(".box[data-cat="+cat.cat+"]").data("enhance", "connected");
+
                         $(".box[data-cat="+cat.cat+"]").clearEnhance();
+                        $(".box[data-cat="+cat.cat+"]").attr("data-enhance", $("#container").attr("data-enhance"));
+                        console.log($("#container").attr("data-enhance"));
                         $(".box[data-cat="+cat.cat+"]").enhance();
                     } else {
                         console.log($("#container").find(".box").filter(":last"), cat.cat);
                         $("#container").find(".box").filter(":last").after("<div class='box' data-cat='"+cat.cat+"'></div>");
                         $(".box[data-cat="+cat.cat+"]").html(data);
                         $(".box[data-cat="+cat.cat+"]").addClass("enhance");
-                        $(".box[data-cat="+cat.cat+"]").data("enhance", "connected");
+
                         $(".box[data-cat="+cat.cat+"]").clearEnhance();
+                        $(".box[data-cat="+cat.cat+"]").attr("data-enhance", $("#container").attr("data-enhance"));
+                        console.log($("#container").attr("data-enhance"));
                         $(".box[data-cat="+cat.cat+"]").enhance();
                     }
 
@@ -178,6 +182,20 @@ $.enhance(palmares.handler.sortTools, {
     title: "Sort Tools",
     group: "connected"
 });
+
+$.enhance(palmares.handler.addCategorie, {
+    id: "ajaxAddCategorie",
+    title: "adding Categorie",
+    group: "admin"
+});
+
+$.enhance(palmares.handler.addTool, {
+    id: "ajaxAddTool",
+    title: "adding tools",
+    group: "admin"
+});
+
+
 
 
 

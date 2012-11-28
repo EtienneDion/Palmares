@@ -12,7 +12,7 @@
         <div id="container" class="enhance" data-enhance="notConnected">
 			<p>
 			    <a href="/">Home</a> |
-			    <a href="/login">Log In</a> or Log in with :
+			    Log in :
 			    <a href="/auth/twitter">Twitter</a> |
                 <a href="/auth/facebook">Facebook</a> |
                 <a href="/auth/google">Google</a> |
@@ -20,12 +20,12 @@
                 <a href="/auth/github">GitHub</a>
 			</p>
 		<% } else { %>
-		<div id="container" <% if (view=="user") { %> class="enhance" data-enhance="connected"<% } %>>
+		<div id="container" <% if (view=="user" && !user.admin) { %> class="enhance" data-enhance="connected"<% } %><% if (user.admin) { %> class="enhance admin" data-enhance="admin"<% } %>>
 			<p>
 			<a href="/">Home</a> | 
 			<a href="/account">Account</a> |
-			<% if (view=="global" || view==null) { %><a href="/">Your choices</a> | <% } %>
-			<% if (view=="user" || view==null) { %><a href="/palmares">All users results</a> | <% } %>
+			<% if ((view=="global" || view==null) && !user.admin) { %><a href="/">Your choices</a> | <% } %>
+			<% if ((view=="user" || view==null) && !user.admin) { %><a href="/palmares">All users results</a> | <% } %>
 			<a href="/logout">Log Out</a>
 			</p>
 		<% } %>
