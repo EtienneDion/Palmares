@@ -58,6 +58,7 @@ var routes = require('./routes')(app);
 
 // normal routes
 app.get('/', routes.index);
+app.get('/palmares', routes.palmares);
 app.get('/account', app.functions.ensureAuthenticated, routes.account);
 app.post('/', passport.authenticate('local', { failureRedirect: '/login', failureFlash: true }), routes.indexPost);
 

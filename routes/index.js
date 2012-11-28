@@ -3,6 +3,7 @@ module.exports = function(app){
 
     return {
         index:index,
+        palmares:palmares,
         indexPost:indexPost,
         account:account,
         logIn:logIn,
@@ -19,7 +20,7 @@ module.exports = function(app){
         //console.log("data", app.data);
 
         var next = function(){
-            res.render('index', {   user: req.user, data: app.data    });
+            res.render('index', {   user: req.user, data: app.data, view: "user"    });
         };
 
         var userId = app.functions.getUserId(req.user);
@@ -28,14 +29,27 @@ module.exports = function(app){
 
 
     }
+    function palmares(req, res, next){
+        //console.log("data", app.data);
+
+        var next = function(){
+            res.render('index', {   user: req.user, data: app.data, view: "global"    });
+        };
+
+        var userId = app.functions.getUserId(req.user);
+        console.log("user : "+userId);
+        app.functions.getData(null, next);
+
+
+    }
     function indexPost(req, res, next) {
         res.redirect('/');
     }
     function account(req, res, next){
-        res.render('account', { user: req.user });
+        res.render('account', { user: req.user, view: null  });
     }
     function logIn(req, res, next){
-        res.render('login', { user: req.user, message: req.flash('error') });
+        res.render('login', { user: req.user, message: req.flash('error'), view: null });
     }
     function loginPost(req, res, next){
         res.redirect('/');
