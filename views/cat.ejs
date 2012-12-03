@@ -1,19 +1,23 @@
+<% for(var i=0; i<data.length; i++) {%>
+    <% if(data[i].id === cat){ %>
+          <h3><%= data[i].name %></h3>
+          <ul class="sortable list">
+              <% for(var y=0; y<data[i].tools.length; y++) {%>
+                 <li data-id="<%= data[i].tools[y].id %>"><span class="handle">::</span> <%= data[i].tools[y].name %></li>
+              <% } %>
+          </ul>
+          <form class="addtool">
+              <h4>Add Tool :</h4>
+              <div class="field">
+                  <label for="tool_name_<%= data[i].id %>">Name : </label>
+                  <input name="tool_name" id="tool_name_<%= data[i].id %>" data-id="name" type="text" value=""/>
+              </div>
+              <div class="field">
+                  <label for="tool_url_<%= data[i].id %>">URL or Repo : </label>
+                  <input name="tool_url" id="tool_url_<%= data[i].id %>" data-id="url" type="text" value=""/>
+              </div>
+              <input type="submit"/>
+          </form>
 
-<h3><%= data[cat].name %></h3>
-<ul class="sortable list">
-    <% for(var y=0; y<data[cat].tools.length; y++) {%>
-       <li data-id="<%= data[cat].tools[y].id %>"><span class="handle">::</span> <%= data[cat].tools[y].name %></li>
     <% } %>
-</ul>
-<form class="addtool">
-    <h4>Add Tool :</h4>
-    <div class="field">
-        <label for="tool_name_<%= data[cat].id %>">Name : </label>
-        <input name="tool_name" id="tool_name_<%= data[cat].id %>" data-id="name" type="text" value=""/>
-    </div>
-    <div class="field">
-        <label for="tool_url_<%= data[cat].id %>">URL or Repo : </label>
-        <input name="tool_url" id="tool_url_<%= data[cat].id %>" data-id="url" type="text" value=""/>
-    </div>
-    <input type="submit"/>
-</form>
+<% } %>

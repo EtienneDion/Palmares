@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Passport</title>
+		<title>Palmares</title>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css">
 
-         <script src="/js/modernizr.custom.62482.js"></script>
+        <script src="/js/modernizr.custom.62482.js"></script>
 
 	</head>
 	<body>
@@ -20,7 +20,7 @@
                 <a href="/auth/github">GitHub</a>
 			</p>
 		<% } else { %>
-		<div id="container" <% if (view=="user" && !user.admin) { %> class="enhance" data-enhance="connected"<% } %><% if (user.admin) { %> class="enhance admin" data-enhance="admin"<% } %>>
+		<div id="container" <% if (view=="user" && !user.admin) { %> class="enhance connected" data-enhance="connected"<% } %><% if (user.admin) { %> class="enhance admin" data-enhance="admin"<% } %>>
 			<p>
 			<a href="/">Home</a> | 
 			<a href="/account">Account</a> |

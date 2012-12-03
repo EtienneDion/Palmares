@@ -68,18 +68,22 @@ module.exports = function(app){
         if(name !== "" && name !== undefined && name !== null ){
 
             app.categories.count( function(error, count){
+                var userId = app.functions.getUserId(req.user);
+
                 app.categories.insert({
                     id: count+1,
-                    name: name
+                    name: name,
+                    approved:0,
+                    createdby: userId
                 });
                 var next = function(){
                     var cat = count+1;
                     res.render('ajax', { result: "ok", cat:cat });
                 };
 
-                var userId = app.functions.getUserId(req.user);
-                console.log("user : "+userId);
-                app.functions.getData(userId, next);
+
+                //console.log("user : "+userId);
+                //app.functions.getData(userId, next);
 
 
             });
@@ -96,17 +100,20 @@ module.exports = function(app){
         if(name !== "" && name !== undefined && name !== null && url !== "" && url !== undefined && url !== null && cat !== "" && cat !== undefined && cat !== null ){
 
             app.tools.count( function(error, count){
+                var userId = app.functions.getUserId(req.user);
+
                 app.tools.insert({
                     id: count+1,
                     name: name,
                     url:url,
-                    categorie:parseInt(cat)
+                    categorie:parseInt(cat),
+                    createdby: userId
                 });
                 var next = function(){
                     res.render('ajax', { result: "ok", cat:null });
                 };
 
-                var userId = app.functions.getUserId(req.user);
+
                 console.log("user : "+userId);
                 app.functions.getData(userId, next);
             });
@@ -156,7 +163,8 @@ module.exports = function(app){
         var cat = req.body.cat;
 
         var next = function(){
-            res.render('cat', {   data: app.data, cat:cat-1    });
+            console.log("cat: ", cat);
+            res.render('cat', {   data: app.data, cat:cat   });
         };
 
 

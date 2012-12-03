@@ -10,6 +10,26 @@ module.exports = function(app, bd){
         getUserId:getUserId
     };
 
+    function isAdmin(id, next) {
+        app.users.findOne({ id:id }, function(err, user) {
+            if(err === null) {
+                console.log(user);
+                if(user !== null && user !== undefined){
+                    if(user.admin){
+                        next(true);
+                    } else {
+                        next(false);
+                    }
+                } else {
+                    next(false);
+                }
+            }  else {
+                next(false);
+            }
+
+        });
+    }
+
     function getUserId(user){
 
         var userId = null;
@@ -21,7 +41,7 @@ module.exports = function(app, bd){
     }
     //auth functions
     function findById(id, fn, done) {
-        var type="";
+
         app.users.findOne({ id:id }, function(err, user) {
             if(err === null)       {
                 fn(null, user);
@@ -63,79 +83,90 @@ module.exports = function(app, bd){
         app.votes = bd.collection("votes");
         var categoriesArray = [];
 
-        var categoriesList = app.categories.find();
+        var categoriesList;
         var toolsList = app.tools.find();
         var votesList;
-        if(userId !== null){
-            votesList = app.votes.find({ user:userId });
-        } else {
-            votesList = app.votes.find();
-        }
 
+        function process(admin){
+            console.log("isAdmin: "+admin, " / userId: "+userId);
+            if(admin){
+                categoriesList = app.categories.find();
+            } else {
+                categoriesList = app.categories.find({ $or:[ { approved:1 }, { $and:[{ approved:0, createdby:userId || 0 }] } ] });
+            }
 
-        categoriesList.forEach(function(x){
-            categoriesArray.push({name:x.name, id:x.id });
-        }, function(){
+            if(userId !== null){
+                votesList = app.votes.find({ user:userId });
+            } else {
+                votesList = app.votes.find();
+            }
 
-            var toolsArray = [];
-
-            var nbOfTools = 0;
-            toolsList.forEach(function(y){
-                toolsArray.push({name:y.name, id:y.id, cat:y.categorie });
+            categoriesList.forEach(function(x){
+                categoriesArray.push({name:x.name, id:x.id, approved:x.approved });
             }, function(){
-                var note = 0,
-                votesArray = [];
 
+                var toolsArray = [];
 
-                votesList.forEach(function(z){
-
-                    votesArray.push({ id:z.id, pos: z.pos });
+                var nbOfTools = 0;
+                toolsList.forEach(function(y){
+                    toolsArray.push({name:y.name, id:y.id, cat:y.categorie });
                 }, function(){
-
-                    for(var i=0;i < categoriesArray.length; i++){
-                        var currentTools =[];
-                        var nbOfTools = 0;
-                        //console.log("i:", i);
-                        for(var j=0;j < toolsArray.length; j++){
-
-                            if(toolsArray[j].cat === categoriesArray[i].id){
-                                nbOfTools++;
-                            }
-                        }
-
-                        for(var l=0;l < toolsArray.length; l++){
+                    var note = 0,
+                        votesArray = [];
 
 
-                            if(toolsArray[l].cat === categoriesArray[i].id){
+                    votesList.forEach(function(z){
 
-                                var note=0;
+                        votesArray.push({ id:z.id, pos: z.pos });
+                    }, function(){
 
-                                for(var m=0;m < votesArray.length; m++){
-                                    if(toolsArray[l].id === votesArray[m].id){
-                                        var tempNote = nbOfTools+1 - votesArray[m].pos;
-                                        note = note + tempNote;
-                                    }
+                        for(var i=0;i < categoriesArray.length; i++){
+                            var currentTools =[];
+                            var nbOfTools = 0;
+                            //console.log("i:", i);
+                            for(var j=0;j < toolsArray.length; j++){
+
+                                if(toolsArray[j].cat === categoriesArray[i].id){
+                                    nbOfTools++;
                                 }
-                                toolsArray[l].note = note;
-
-                                currentTools.push(toolsArray[l]);
                             }
+
+                            for(var l=0;l < toolsArray.length; l++){
+
+
+                                if(toolsArray[l].cat === categoriesArray[i].id){
+
+                                    var note=0;
+
+                                    for(var m=0;m < votesArray.length; m++){
+                                        if(toolsArray[l].id === votesArray[m].id){
+                                            var tempNote = nbOfTools+1 - votesArray[m].pos;
+                                            note = note + tempNote;
+                                        }
+                                    }
+                                    toolsArray[l].note = note;
+
+                                    currentTools.push(toolsArray[l]);
+                                }
+                            }
+
+                            currentTools = sortByProp(currentTools, "note");
+
+                            categoriesArray[i].tools = currentTools;
+
                         }
+                        // console.log(categoriesArray);
+                        app.data = categoriesArray;
 
-                        currentTools = sortByProp(currentTools, "note");
-
-                        categoriesArray[i].tools = currentTools;
-
-                    }
-                   // console.log(categoriesArray);
-                    app.data = categoriesArray;
-
-                    next();
+                        next();
 
 
+                    });
                 });
             });
-        });
+        }
+
+        isAdmin(userId, process);
 
     }
 
