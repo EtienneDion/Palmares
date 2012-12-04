@@ -13,7 +13,8 @@ module.exports = function(app){
         ajaxAddCategorie:ajaxAddCategorie,
         ajaxAddTool:ajaxAddTool,
         ajaxVotes:ajaxVotes,
-        ajaxRefreshCat:ajaxRefreshCat
+        ajaxRefreshCat:ajaxRefreshCat,
+        ajaxApproveCat:ajaxApproveCat
     };
 
     function index(req, res, next){
@@ -82,8 +83,8 @@ module.exports = function(app){
                 };
 
 
-                //console.log("user : "+userId);
-                //app.functions.getData(userId, next);
+                console.log("user : "+userId);
+                app.functions.getData(userId, next);
 
 
             });
@@ -163,14 +164,32 @@ module.exports = function(app){
         var cat = req.body.cat;
 
         var next = function(){
-            console.log("cat: ", cat);
-            res.render('cat', {   data: app.data, cat:cat   });
+            console.log("cat: ", parseInt(cat));
+            res.render('cat', { user: req.user, data: app.data, cat:parseInt(cat) });
         };
-
 
         var userId = app.functions.getUserId(req.user);
         console.log("user : "+userId);
         app.functions.getData(userId,next);
+
+    }
+
+    function ajaxApproveCat(req, res, next){
+
+        var cat = req.body.cat;
+
+        var next = function(){
+            var userId = app.functions.getUserId(req.user);
+            console.log("user : "+userId, "approved cat : "+ parseInt(cat));
+            app.functions.getData(userId,next2);
+        };
+
+        var next2 = function(){
+            console.log("cat: ", parseInt(cat), app.data);
+            res.render('ajax', { result: "ok", cat:parseInt(cat) });
+        };
+
+        app.categories.update({ id: parseInt(cat) },{ $set: { approved:1 }}, null, next);
 
     }
 };

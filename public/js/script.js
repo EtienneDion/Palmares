@@ -3,9 +3,9 @@ var palmares = (function () {
 
     var doAjax = function (path, values, refreshCat) {
 
-        console.log(values);
-        var params = JSON.stringify( values );
-        console.log(params);
+        console.log(values, refreshCat);
+        //var params = JSON.stringify( values );
+        //console.log(params);
         $.ajax({
             type: 'POST',
             url: '/ajax/'+path,
@@ -31,13 +31,13 @@ var palmares = (function () {
 
         $.ajax({
             type: 'POST',
-            url: '/ajax/get_categories',
+            url: '/ajax/get_categorie',
             dataType: "html",
             data: cat,
             success:
                 function(data) {
                     if( $(".box[data-cat="+cat.cat+"]").length ){
-                        $(".box[data-cat="+cat.cat+"]").html(data);
+                        $(".box[data-cat="+cat.cat+"]").replaceWith(data);
                         $(".box[data-cat="+cat.cat+"]").addClass("enhance");
 
                         $(".box[data-cat="+cat.cat+"]").clearEnhance();
@@ -47,7 +47,7 @@ var palmares = (function () {
                     } else {
                         console.log($("#container").find(".box").filter(":last"), cat.cat);
                         $("#container").find(".box").filter(":last").after("<div class='box' data-cat='"+cat.cat+"'></div>");
-                        $(".box[data-cat="+cat.cat+"]").html(data);
+                        $(".box[data-cat="+cat.cat+"]").replaceWith(data);
                         $(".box[data-cat="+cat.cat+"]").addClass("enhance");
 
                         $(".box[data-cat="+cat.cat+"]").clearEnhance();
@@ -94,7 +94,7 @@ var palmares = (function () {
             values[ $(this).data("id") ] =  $(this).val();
         });
 
-        doAjax("add_categories", values, "last");
+        doAjax("add_categorie", values, "last");
     };
 
     var ajaxTool = function (fields) {
@@ -104,8 +104,15 @@ var palmares = (function () {
         });
         values["cat"] = $(fields[0]).parents(".box").data("cat");
 
-        doAjax("add_tools", values, values["cat"]);
+        doAjax("add_tool", values, values["cat"]);
 
+    };
+
+    var ajaxApproveCat = function ($cat){
+        var values = {};
+        values["cat"] =  $cat.data("cat");
+
+        doAjax("approve_categorie", values, values["cat"]);
 
     };
 
@@ -152,12 +159,24 @@ var palmares = (function () {
 
     };
 
+    var approveCategories = function (context) {
+        var $btn = $(context).find(".box.notApproved h3 a");
+
+        $btn.click(function(e){
+            e.preventDefault();
+            var $cat = $(this).parents(".box.notApproved");
+            console.log($cat);
+            ajaxApproveCat($cat);
+        });
+    };
+
     return {
         handler:{
             addCategorie: addCategorie,
             addTool: addTool,
             sortTools: sortTools,
-            getCategorie: getCategorie
+            getCategorie: getCategorie,
+            approveCategories: approveCategories
         }
     }
 })();
@@ -170,6 +189,8 @@ $.enhance(palmares.handler.addCategorie, {
     title: "adding Categorie",
     group: "connected"
 });
+
+
 
 $.enhance(palmares.handler.addTool, {
     id: "ajaxAddTool",
@@ -189,9 +210,9 @@ $.enhance(palmares.handler.addCategorie, {
     group: "admin"
 });
 
-$.enhance(palmares.handler.addTool, {
-    id: "ajaxAddTool",
-    title: "adding tools",
+$.enhance(palmares.handler.approveCategories, {
+    id: "approveCategories",
+    title: "approving Categorie",
     group: "admin"
 });
 

@@ -79,10 +79,12 @@ app.get('/auth/github/callback', passport.authenticate('github', { failureRedire
 app.get('/logout', routes.logOut);
 
 //ajax
-app.post('/ajax/add_categories', app.functions.ensureAuthenticated, routes.ajaxAddCategorie);
-app.post('/ajax/add_tools', app.functions.ensureAuthenticated, routes.ajaxAddTool);
+app.post('/ajax/add_categorie', app.functions.ensureAuthenticated, routes.ajaxAddCategorie);
+app.post('/ajax/add_tool', app.functions.ensureAuthenticated, routes.ajaxAddTool);
 app.post('/ajax/sort', app.functions.ensureAuthenticated, routes.ajaxVotes);
-app.post('/ajax/get_categories', app.functions.ensureAuthenticated, routes.ajaxRefreshCat);
+app.post('/ajax/get_categorie', app.functions.ensureAuthenticated, routes.ajaxRefreshCat);
+app.post('/ajax/approve_categorie', app.functions.ensureAuthenticated, routes.ajaxApproveCat);
+
 
 app.listen(3000);
 
