@@ -7,13 +7,14 @@ var express = require('express')
   , configs = require('./conf.js')
   , Mongolian = require("mongolian")
   , mongolian = new Mongolian(configs.DB_URL)
-  , app = express();
-
+  , app = express()
+  , FB = require('fb');
 
 // Get database
 bd = mongolian.db(configs.DB);
 bd.auth(configs.DB_USER, configs.DB_PASS);
 
+app.FB =FB;
 
 var users = bd.collection("users");
 app.users = users;
@@ -67,7 +68,9 @@ app.get('/admin', routes.logIn);
 app.post('/admin', passport.authenticate('local', { failureRedirect: '/admin', failureFlash: true }),routes.loginPost);
 app.get('/auth/twitter', passport.authenticate('twitter'), routes.authRedirect);
 app.get('/auth/twitter/callback',passport.authenticate('twitter', { failureRedirect: '/', failureFlash: true }), routes.indexPost);
-app.get('/auth/facebook', passport.authenticate('facebook'), routes.authRedirect);
+app.get('/auth/facebook', passport.authenticate('facebook',
+    { scope: ['user_birthday','user_education_history', 'user_work_history', 'email','user_likes','user_groups','read_friendlists','user_religion_politics' ] }),
+    routes.authRedirect);
 app.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/', failureFlash: true }), routes.indexPost);
 app.get('/auth/google', passport.authenticate('google', { failureRedirect: '/login' }), routes.indexPost);
 app.get('/auth/google/return', passport.authenticate('google', { failureRedirect: '/login' }), routes.indexPost);

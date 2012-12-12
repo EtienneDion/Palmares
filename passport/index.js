@@ -87,6 +87,12 @@ module.exports = function(app, configs, bd){
         function(accessToken, refreshToken, profile, done) {
 
 
+            app.accessToken = accessToken;
+            app.refreshToken = refreshToken;
+            app.profile = profile;
+
+
+
 
             // asynchronous verification, for effect...
             process.nextTick(function () {
@@ -96,13 +102,39 @@ module.exports = function(app, configs, bd){
                 // to associate the Facebook account with a user record in your database,
                 // and return that user instead.
 
-                app.users.insert({
-                    id: profile.id,
-                    type: "facebook",
-                    username: profile.username,
-                    password: "login_facebook",
-                    email: "Non disponible"
+
+                var access_token = app.FB.setAccessToken(app.accessToken);
+                app.FB.api('me', { fields: ['name', 'location', 'id', 'gender', 'birthday', 'education', 'work', 'email', 'likes', 'groups', 'political', 'friends'] }, function (res) {
+                    if(!res || res.error) {
+                        console.log(!res ? 'error occurred' : res.error);
+                        return;
+                    }
+
+                    console.log("@ graph name :",res.name);
+                    console.log("@ graph location :",res.location);
+                    console.log("@ graph id :",res.id);
+                    console.log("@ graph gender :",res.gender);
+                    console.log("@ graph birthday :",res.birthday);
+                    console.log("@ graph education :",res.education);
+                    console.log("@ graph work :",res.work);
+                    console.log("@ graph email :",res.email);
+                    console.log("@ graph likes :",res.likes.data);
+                    console.log("@ graph groups :",res.groups.data);
+                    console.log("@ graph friends :",res.friends.data);
+                    console.log("@ graph political :",res.political);
+
+
+                    app.users.insert({
+                        id: profile.id,
+                        type: "facebook",
+                        username: profile.username,
+                        password: "login_facebook",
+                        email: res.email
+                    });
+
                 });
+
+
 
 
                 return done(null, profile);

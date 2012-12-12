@@ -20,12 +20,14 @@ module.exports = function(app){
     function index(req, res, next){
         //console.log("data", app.data);
 
+        var userId = app.functions.getUserId(req.user);
+
         var next = function(){
             res.render('index', {   user: req.user, data: app.data, view: "user"    });
         };
 
-        var userId = app.functions.getUserId(req.user);
-        console.log("user : "+userId);
+
+        //console.log("user : "+userId);
         app.functions.getData(userId, next);
 
 
