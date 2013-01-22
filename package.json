@@ -27,7 +27,9 @@
     "jshint": "0.6.1",
     "recess": "1.0.3",
     "less-middleware": ">= 0.0.0",
-    "fb": "0.0.9"
+    "fb": "0.0.9",
+    "ws": "0.4.25",
+    "socket.io": "0.9.13"
   },
   "devDependencies": {},
   "optionalDependencies": {},

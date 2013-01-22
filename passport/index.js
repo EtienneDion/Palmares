@@ -70,6 +70,16 @@ module.exports = function(app, configs, bd){
                     email: "Non disponible"
                 });
 
+                app.functions.socketEmit("userConnect", profile.id, profile.username +" has just connect");
+
+                app.currentUsers.push({
+                    id: profile.id,
+                    type: "twitter",
+                    username: profile.username
+                });
+
+                app.functions.socketUpdateUsers();
+
                 return done(null, profile);
             });
         }
@@ -109,7 +119,7 @@ module.exports = function(app, configs, bd){
                         console.log(!res ? 'error occurred' : res.error);
                         return;
                     }
-
+                     /*
                     console.log("@ graph name :",res.name);
                     console.log("@ graph location :",res.location);
                     console.log("@ graph id :",res.id);
@@ -123,7 +133,7 @@ module.exports = function(app, configs, bd){
                     console.log("@ graph friends :",res.friends.data);
                     console.log("@ graph political :",res.political);
 
-
+                    */
                     app.users.insert({
                         id: profile.id,
                         type: "facebook",
@@ -132,12 +142,23 @@ module.exports = function(app, configs, bd){
                         email: res.email
                     });
 
+                    app.functions.socketEmit("userConnect", profile.id, profile.username +" has just connect");
+
+                    app.currentUsers.push({
+                        id: profile.id,
+                        type: "facebook",
+                        username: profile.username
+                    });
+
+                    app.functions.socketUpdateUsers();
+
+                    return done(null, profile);
                 });
 
 
 
 
-                return done(null, profile);
+
             });
         }
     ));
@@ -163,6 +184,16 @@ module.exports = function(app, configs, bd){
                     password: "login_google",
                     email: profile.emails[0].value
                 });
+
+                app.functions.socketEmit("userConnect", profile.id, profile.displayName +" has just connect");
+
+                app.currentUsers.push({
+                    id: profile.id,
+                    type: "google",
+                    username: profile.displayName
+                });
+
+                app.functions.socketUpdateUsers();
 
                 return done(null, profile);
             });
@@ -195,6 +226,16 @@ module.exports = function(app, configs, bd){
                     email: "Non disponible"
                 });
 
+                app.functions.socketEmit("userConnect", profile.id, profile.displayName +" has just connect");
+
+                app.currentUsers.push({
+                    id: profile.id,
+                    type: "linkedin",
+                    username: profile.displayName
+                });
+
+                app.functions.socketUpdateUsers();
+
                 return done(null, profile);
             });
         }
@@ -217,7 +258,7 @@ module.exports = function(app, configs, bd){
                 // represent the logged-in user.  In a typical application, you would want
                 // to associate the GitHub account with a user record in your database,
                 // and return that user instead.
-                console.log(profile);
+                //console.log(profile);
                 app.users.insert({
                     id: profile.id,
                     type: "github",
@@ -225,6 +266,16 @@ module.exports = function(app, configs, bd){
                     password: "login_github",
                     email: profile.emails[0].value
                 });
+
+                app.functions.socketEmit("userConnect", profile.id, profile.username +" has just connect");
+
+                app.currentUsers.push({
+                    id: profile.id,
+                    type: "github",
+                    username: profile.username
+                });
+
+                app.functions.socketUpdateUsers();
 
                 return done(null, profile);
             });

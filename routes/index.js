@@ -18,7 +18,6 @@ module.exports = function(app){
     };
 
     function index(req, res, next){
-        //console.log("data", app.data);
 
         var userId = app.functions.getUserId(req.user);
 
@@ -26,23 +25,18 @@ module.exports = function(app){
             res.render('index', {   user: req.user, data: app.data, view: "user"    });
         };
 
-
-        //console.log("user : "+userId);
         app.functions.getData(userId, next);
-
 
     }
     function palmares(req, res, next){
-        //console.log("data", app.data);
 
         var next = function(){
             res.render('index', {   user: req.user, data: app.data, view: "global"    });
         };
 
         var userId = app.functions.getUserId(req.user);
-        console.log("user : "+userId);
+        //console.log("user : "+userId);
         app.functions.getData(null, next);
-
 
     }
     function indexPost(req, res, next) {
@@ -62,34 +56,42 @@ module.exports = function(app){
         // function will not be called.
     }
     function logOut(req, res, next){
-        req.logout();
-        res.redirect('/');
+
+        var cb = function(){
+            app.functions.socketUpdateUsers();
+            req.logout();
+            res.redirect('/');
+        }
+
+        var userId = app.functions.getUserId(req.user);
+
+        app.functions.logoutUser(userId, cb);
+
+
+
     }
 
     function ajaxAddCategorie(req, res, next){
         var name = req.body.name;
         if(name !== "" && name !== undefined && name !== null ){
 
-            app.categories.count( function(error, count){
-                var userId = app.functions.getUserId(req.user);
+            var userId = app.functions.getUserId(req.user);
 
-                app.categories.insert({
-                    id: count+1,
-                    name: name,
-                    approved:0,
-                    createdby: userId
-                });
+            var cb = function(userId, count){
                 var next = function(){
                     var cat = count+1;
                     res.render('ajax', { result: "ok", cat:cat });
-                };
 
+                    app.functions.socketEmit("catAdded", userId, req.user.username +" has just suggest '"+ name +"' as a new category." );
+                };
 
                 console.log("user : "+userId);
                 app.functions.getData(userId, next);
+            }
+
+            app.functions.addCategorie(name, userId, cb);
 
 
-            });
         } else {
             res.render('ajax', { result: "error", cat:null });
         }
@@ -100,26 +102,26 @@ module.exports = function(app){
         var name = req.body.name;
         var url = req.body.url;
         var cat = req.body.cat;
+        var userId = app.functions.getUserId(req.user);
+
         if(name !== "" && name !== undefined && name !== null && url !== "" && url !== undefined && url !== null && cat !== "" && cat !== undefined && cat !== null ){
 
-            app.tools.count( function(error, count){
-                var userId = app.functions.getUserId(req.user);
-
-                app.tools.insert({
-                    id: count+1,
-                    name: name,
-                    url:url,
-                    categorie:parseInt(cat),
-                    createdby: userId
-                });
+            var cb = function(userId){
                 var next = function(){
                     res.render('ajax', { result: "ok", cat:null });
-                };
 
+                    app.functions.socketEmit("toolAdded", userId, req.user.username +" has just added '"+ name +"' in " + app.functions.getCatName(cat) );
+
+                };
 
                 console.log("user : "+userId);
                 app.functions.getData(userId, next);
-            });
+
+            }
+
+            app.functions.addTool(cat, name, url, userId, cb);
+
+
         } else {
             res.render('ajax', { result: "error", cat:null });
         }
@@ -132,29 +134,19 @@ module.exports = function(app){
         var order = req.body.order;
         var cat = req.body.cat;
 
-        app.votes.remove({ cat:parseInt(cat), user:userId});
 
         if(cat !== "" && cat !== undefined && cat !== null  ){
-            for(var i=0; i < order.length; i++ ){
-                console.log("{ id:"+ order[i].id
-                    +",pos:"+ (i+1)
-                    +",cat:"+ cat
-                    +",user:"+ userId
-                    +"}");
 
-                    app.votes.insert({
-                        id: parseInt(order[i].id),
-                        pos: (i+1),
-                        cat:parseInt(cat),
-                        user:userId
-                    });
-
+            var cb = function(userId){
+                var next = function(){
+                    res.render('ajax', { result: "ok", cat:null });
+                };
+                console.log("user : "+userId);
+                app.functions.getData(userId, next);
             }
-            var next = function(){
-                res.render('ajax', { result: "ok", cat:null });
-            };
-            console.log("user : "+userId);
-            app.functions.getData(userId, next);
+
+            app.functions.vote(userId, cat, order, cb);
+
         }  else {
             res.render('ajax', { result: "error", cat:null });
         }

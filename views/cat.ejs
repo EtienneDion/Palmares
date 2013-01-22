@@ -1,7 +1,7 @@
 <% for(var i=0; i<data.length; i++) {%>
     <% if(data[i].id === cat){ %>
         <div class="box <% if (user.admin && data[i].approved === 0) { %>notApproved<% } %>" data-cat="<%= data[i].id %>" >
-              <h3><%= data[i].name %></h3>
+              <h3 class="loadingAnchor"><%= data[i].name %></h3>
               <ul class="sortable list">
                   <% for(var y=0; y<data[i].tools.length; y++) {%>
                      <li data-id="<%= data[i].tools[y].id %>"><span class="handle">::</span> <%= data[i].tools[y].name %></li>

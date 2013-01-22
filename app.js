@@ -8,22 +8,28 @@ var express = require('express')
   , Mongolian = require("mongolian")
   , mongolian = new Mongolian(configs.DB_URL)
   , app = express()
-  , FB = require('fb');
+  , FB = require('fb')
+  , io = require('socket.io')
+  , server = http.createServer(app)
+  , events = require('events')
+  , eventEmitter = new events.EventEmitter;
+
+app.FB =FB;
+app.io = io;
+app.eventEmitter = eventEmitter;
 
 // Get database
 bd = mongolian.db(configs.DB);
 bd.auth(configs.DB_USER, configs.DB_PASS);
 
-app.FB =FB;
-
 var users = bd.collection("users");
 app.users = users;
-
+app.currentUsers=[];
 // functions
 app.functions = require('./functions')(app, bd);
 // auth
 var passport = require('./passport')(app, configs);
-
+//console.log(app);
 
 
 // configure Express
@@ -79,7 +85,7 @@ app.get('/auth/linkedin/callback', passport.authenticate('linkedin', { failureRe
 app.get('/auth/github', passport.authenticate('github'), routes.authRedirect);
 app.get('/auth/github/callback', passport.authenticate('github', { failureRedirect: '/login' }), routes.indexPost);
 //logout
-app.get('/logout', routes.logOut);
+app.get('/logout', app.functions.ensureAuthenticated, routes.logOut);
 
 //ajax
 app.post('/ajax/add_categorie', app.functions.ensureAuthenticated, routes.ajaxAddCategorie);
@@ -89,7 +95,13 @@ app.post('/ajax/get_categorie', app.functions.ensureAuthenticated, routes.ajaxRe
 app.post('/ajax/approve_categorie', app.functions.ensureAuthenticated, routes.ajaxApproveCat);
 
 
-app.listen(3000);
+
+app.io = app.io.listen(server);
+
+app.functions.socketInit(function(){});
+
+server.listen(3000);
+console.log('Express app started on port 3000');
 
 console.log('Node Version: ' + process.version);
 console.log(configs);

@@ -1,3 +1,5 @@
+@import "mixins.less";
+
 .field{
 
     &.error{
@@ -12,7 +14,19 @@
         }
     }
 }
-
+form{
+    clear: both;
+}
+.box{
+    float: left;
+    width: 360px;
+    h3{
+        margin-left: 30px;
+    }
+    form{
+        margin-left: 45px;
+    }
+}
 .list{
     width: 310px;
     -webkit-user-select: none;
@@ -21,18 +35,29 @@
     user-select: none;
     li {
         list-style: none;
-        border: 1px solid #CCC;
-        background: #F6F6F6;
-        color: #1C94C4;
+        border: 1px solid #AAA;
+        background: #DDD;
+        color: #333;
         margin: 5px;
         padding: 5px;
         height: 22px;
         line-height: 1.4em;
         cursor: default;
+        &.hot{
+            border: 1px solid red;
+            background: #f08080;
+            color: #8b0000;
+        }
+        &.cold{
+            border: 1px solid #0000ff;
+            background: #F6F6F6;
+            color: #1C94C4;
+        }
         .handle  {
             cursor: default;
             opacity:0;
         }
+
     }
 }
 .connected  .list li .handle {
@@ -43,4 +68,138 @@
 
 .box.notApproved{
     color:red;
+}
+
+.loading{
+    width:16px;
+    height:16px;
+    display:inline-block;
+    margin-left:10px;
+    background: transparent url(../images/ajax-loader.gif) no-repeat 0 0;
+}
+
+#socketMsg{
+
+    top:10px;
+    position:fixed;
+    right:10px;
+    width: 400px;
+    span{
+        height: 15px;
+        opacity: 0.3;
+        margin-top:3px;
+        width:380px;
+        display:block;
+
+        /* Firefox */
+        -moz-transition: all 1s ease;
+        /* WebKit */
+        -webkit-transition: all 1s ease;
+        /* Opera */
+        -o-transition: all 1s ease;
+        /* Standard */
+        transition: all 1s ease;
+    }
+    .active{
+        height: 20px;
+        opacity: 1;
+        /* Firefox */
+        -moz-transform: translate(0,5px);
+        /* WebKit */
+        -webkit-transform: translate(0,5px);
+        /* Opera */
+        -o-transform: translate(0,5px);
+        /* Standard */
+        transform: translate(0,5px);
+    }
+    .active.removing{
+        opacity: 0;
+    }
+    .connect{
+        border:1px solid green;
+        .border-radius(3px);
+        background-color: #adff2f;
+        color:black;
+        padding-left:10px;
+        padding-right:10px;
+        padding-top:4px;
+        padding-bottom:4px;
+    }
+    .toolAdded{
+        border:1px solid #0000ff ;
+        .border-radius(3px);
+        background-color: #add8e6;
+        color:black;
+        padding-left:10px;
+        padding-right:10px;
+        padding-top:4px;
+        padding-bottom:4px;
+    }
+    .vote{
+        border:1px solid #0000ff ;
+        .border-radius(3px);
+        background-color: #add8e6;
+        color:black;
+        padding-left:10px;
+        padding-right:10px;
+        padding-top:4px;
+        padding-bottom:4px;
+    }
+    .catAdded{
+        border:1px solid #ff4500;
+        .border-radius(3px);
+        background-color: #ffa07a;
+        color:black;
+        padding-left:10px;
+        padding-right:10px;
+        padding-top:4px;
+        padding-bottom:4px;
+    }
+}
+
+#socketUsers{
+    bottom:10px;
+    position:fixed;
+    right:10px;
+    width: 240px;
+    span{
+        height: 15px;
+        margin-top:3px;
+        width:220px;
+        display:block;
+        border:1px solid #0000ff;
+        .border-radius(3px);
+
+        background:#add8e6;
+        color:black;
+        padding-left:10px;
+        padding-right:10px;
+        padding-top:1px;
+        padding-bottom:6px;
+
+        /* Firefox */
+        -moz-transition: all 1s ease;
+        /* WebKit */
+        -webkit-transition: all 1s ease;
+        /* Opera */
+        -o-transition: all 1s ease;
+        /* Standard */
+        transition: all 1s ease;
+
+        span.icon{
+            margin-top:4px;
+            margin-left:2px;
+            margin-right:10px;
+            margin-bottom:2px;
+            padding:0;
+            background-color: #0000ff;
+            .border-radius(5px);
+            width:10px;
+            height:10px;
+            text-indent: 5555000px;
+            display:block;
+            float:left;
+        }
+
+    }
 }

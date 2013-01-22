@@ -1,5 +1,9 @@
 <% layout('layout') -%>
+
+<div id="resultat"></div>
+
 <% if (!user ) { %>
+
 
 	<h2>Welcome! Please log in.</h2>
 
@@ -8,7 +12,7 @@
             <h3><%= data[i].name %></h3>
             <ul class="list">
                 <% for(var y=0; y<data[i].tools.length; y++) {%>
-                   <li><span class="handle">::</span> <%= data[i].tools[y].name %></li>
+                   <li class="<%= data[i].tools[y].status %>"><span class="handle">::</span> <%= data[i].tools[y].name %></li>
                 <% } %>
             </ul>
         </div>
@@ -23,7 +27,7 @@
 
         <% for(var i=0; i<data.length; i++) {%>
             <div class="box <% if (user.admin && data[i].approved === 0) { %>notApproved<% } %>" data-cat="<%= data[i].id %>" >
-                <h3><%= data[i].name %><% if (user.admin && data[i].approved === 0) { %> &nbsp;&nbsp;&nbsp;&nbsp;<a href="#">Approve</a><% } %></h3>
+                <h3 class="loadingAnchor"><%= data[i].name %><% if (user.admin && data[i].approved === 0) { %> &nbsp;&nbsp;&nbsp;&nbsp;<a href="#">Approve</a><% } %></h3>
                 <ul class="sortable list">
                     <% for(var y=0; y<data[i].tools.length; y++) {%>
                        <li data-id="<%= data[i].tools[y].id %>"><span class="handle">::</span> <%= data[i].tools[y].name %></li>
@@ -48,7 +52,7 @@
 
         <br/>
         <form class="addcategorie">
-            <h4>Add Categorie</h4>
+            <h4 class="loadingAnchor">Add Categorie</h4>
             <div class="field">
                 <label for="categorie_name">Name : </label>
                 <input name="categorie_name" id="categorie_name" data-id="name" type="text" value=""/>
@@ -58,10 +62,10 @@
     <% } else { %>
         <% for(var i=0; i<data.length; i++) {%>
             <div class="box">
-                <h3><%= data[i].name %></h3>
+                <h3 class="loadingAnchor"><%= data[i].name %></h3>
                 <ul class="list">
                     <% for(var y=0; y<data[i].tools.length; y++) {%>
-                       <li><span class="handle">::</span> <%= data[i].tools[y].name %></li>
+                       <li class="<%= data[i].tools[y].status %>"><span class="handle">::</span> <%= data[i].tools[y].name %></li>
                     <% } %>
                 </ul>
             </div>
@@ -72,6 +76,6 @@
 
 
 
-    <div id="resultat"></div>
+
 <% } %>
 

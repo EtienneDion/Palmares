@@ -1,7 +1,24 @@
+.clearfix{*zoom:1;}.clearfix:before,.clearfix:after{display:table;content:"";line-height:0;}
+.clearfix:after{clear:both;}
+.hide-text{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0;}
 .field.error label{color:red;}
 .field.error input{border:1px solid red;}
 .field.error .errorMsg{color:red;}
-.list{width:310px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}.list li{list-style:none;border:1px solid #CCC;background:#F6F6F6;color:#1C94C4;margin:5px;padding:5px;height:22px;line-height:1.4em;cursor:default;}.list li .handle{cursor:default;opacity:0;}
+form{clear:both;}
+.box{float:left;width:360px;}.box h3{margin-left:30px;}
+.box form{margin-left:45px;}
+.list{width:310px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}.list li{list-style:none;border:1px solid #AAA;background:#DDD;color:#333;margin:5px;padding:5px;height:22px;line-height:1.4em;cursor:default;}.list li.hot{border:1px solid red;background:#f08080;color:#8b0000;}
+.list li.cold{border:1px solid #0000ff;background:#F6F6F6;color:#1C94C4;}
+.list li .handle{cursor:default;opacity:0;}
 .connected .list li .handle{cursor:move;opacity:1;}
 #container.admin .handle{display:none;}
 .box.notApproved{color:red;}
+.loading{width:16px;height:16px;display:inline-block;margin-left:10px;background:transparent url(../images/ajax-loader.gif) no-repeat 0 0;}
+#socketMsg{top:10px;position:fixed;right:10px;width:400px;}#socketMsg span{height:15px;opacity:0.3;margin-top:3px;width:380px;display:block;-moz-transition:all 1s ease;-webkit-transition:all 1s ease;-o-transition:all 1s ease;transition:all 1s ease;}
+#socketMsg .active{height:20px;opacity:1;-moz-transform:translate(0, 5px);-webkit-transform:translate(0, 5px);-o-transform:translate(0, 5px);transform:translate(0, 5px);}
+#socketMsg .active.removing{opacity:0;}
+#socketMsg .connect{border:1px solid green;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;background-color:#adff2f;color:black;padding-left:10px;padding-right:10px;padding-top:4px;padding-bottom:4px;}
+#socketMsg .toolAdded{border:1px solid #0000ff ;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;background-color:#add8e6;color:black;padding-left:10px;padding-right:10px;padding-top:4px;padding-bottom:4px;}
+#socketMsg .vote{border:1px solid #0000ff ;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;background-color:#add8e6;color:black;padding-left:10px;padding-right:10px;padding-top:4px;padding-bottom:4px;}
+#socketMsg .catAdded{border:1px solid #ff4500;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;background-color:#ffa07a;color:black;padding-left:10px;padding-right:10px;padding-top:4px;padding-bottom:4px;}
+#socketUsers{bottom:10px;position:fixed;right:10px;width:240px;}#socketUsers span{height:15px;margin-top:3px;width:220px;display:block;border:1px solid #0000ff;-webkit-border-radius:3px;-moz-border-radius:3px;border-radius:3px;background:#add8e6;color:black;padding-left:10px;padding-right:10px;padding-top:1px;padding-bottom:6px;-moz-transition:all 1s ease;-webkit-transition:all 1s ease;-o-transition:all 1s ease;transition:all 1s ease;}#socketUsers span span.icon{margin-top:4px;margin-left:2px;margin-right:10px;margin-bottom:2px;padding:0;background-color:#0000ff;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px;width:10px;height:10px;text-indent:5555000px;display:block;float:left;}

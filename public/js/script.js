@@ -1,11 +1,29 @@
 
 var palmares = (function () {
+    var loadingIconList = [],
+    loadingIconFn = {
+        start: function($elem){
+            //loadingIconList.push({ id:loadingIconList.length+1, elem:elem });
+            if(!$elem.find(".loading").length){
+                $elem.append("<div class='loading'></div>");
+            }
+        },
+        stop: function($elem){
+            $elem.find(".loading").remove();
+        }
+    },
 
-    var doAjax = function (path, values, refreshCat) {
+    doAjax = function (path, values, refreshCat) {
 
-        console.log(values, refreshCat);
-        //var params = JSON.stringify( values );
-        //console.log(params);
+        var $loadingAnchor;
+        if (refreshCat === "last"){
+            $loadingAnchor = $(".addcategorie .loadingAnchor");
+        } else {
+            $loadingAnchor = $(".box[data-cat="+refreshCat+"] .loadingAnchor");
+        }
+
+        loadingIconFn.start($loadingAnchor);
+
         $.ajax({
             type: 'POST',
             url: '/ajax/'+path,
@@ -13,54 +31,61 @@ var palmares = (function () {
             data: values,
             success:
                 function(data) {
-                    $('#resultat').html(data);
 
-                    if (refreshCat === "last"){
-                        getCategorie({cat:data.cat});
-                    } else {
-                        if(refreshCat !== null){
-                            getCategorie({cat:refreshCat})
+                    if(data.result == "ok"){
+
+                        if (refreshCat === "last"){
+                            getCategorie(data.cat, $loadingAnchor);
+                        } else {
+                            if(path !== "sort"){
+                                getCategorie(refreshCat, $loadingAnchor);
+                            } else {
+                                    loadingIconFn.stop($loadingAnchor);
+                            }
                         }
+                    } else {
+                        $('#resultat').html(data);
                     }
-
                 }
         });
 
-    };
-    var getCategorie = function(cat){
+    },
 
+    getCategorie = function(cat, $loadingAnchor){
+        var param = {cat:cat};
         $.ajax({
             type: 'POST',
             url: '/ajax/get_categorie',
             dataType: "html",
-            data: cat,
+            data: param,
             success:
                 function(data) {
-                    if( $(".box[data-cat="+cat.cat+"]").length ){
-                        $(".box[data-cat="+cat.cat+"]").replaceWith(data);
-                        $(".box[data-cat="+cat.cat+"]").addClass("enhance");
+                    if( $(".box[data-cat="+cat+"]").length ){
+                        $(".box[data-cat="+cat+"]").replaceWith(data);
+                        $(".box[data-cat="+cat+"]").addClass("enhance");
 
-                        $(".box[data-cat="+cat.cat+"]").clearEnhance();
-                        $(".box[data-cat="+cat.cat+"]").attr("data-enhance", $("#container").attr("data-enhance"));
-                        console.log($("#container").attr("data-enhance"));
-                        $(".box[data-cat="+cat.cat+"]").enhance();
+                        $(".box[data-cat="+cat+"]").clearEnhance();
+                        $(".box[data-cat="+cat+"]").attr("data-enhance", $("#container").attr("data-enhance"));
+                        //console.log($("#container").attr("data-enhance"));
+                        $(".box[data-cat="+cat+"]").enhance();
+
                     } else {
-                        console.log($("#container").find(".box").filter(":last"), cat.cat);
-                        $("#container").find(".box").filter(":last").after("<div class='box' data-cat='"+cat.cat+"'></div>");
-                        $(".box[data-cat="+cat.cat+"]").replaceWith(data);
-                        $(".box[data-cat="+cat.cat+"]").addClass("enhance");
+                        //console.log($("#container").find(".box").filter(":last"), cat);
+                        $("#container").find(".box").filter(":last").after("<div class='box' data-cat='"+cat+"'></div>");
+                        $(".box[data-cat="+cat+"]").replaceWith(data);
+                        $(".box[data-cat="+cat+"]").addClass("enhance");
 
-                        $(".box[data-cat="+cat.cat+"]").clearEnhance();
-                        $(".box[data-cat="+cat.cat+"]").attr("data-enhance", $("#container").attr("data-enhance"));
-                        console.log($("#container").attr("data-enhance"));
-                        $(".box[data-cat="+cat.cat+"]").enhance();
+                        $(".box[data-cat="+cat+"]").clearEnhance();
+                        $(".box[data-cat="+cat+"]").attr("data-enhance", $("#container").attr("data-enhance"));
+                        //console.log($("#container").attr("data-enhance"));
+                        $(".box[data-cat="+cat+"]").enhance();
                     }
-
+                    loadingIconFn.stop($loadingAnchor);
                 }
         });
-    };
+    },
 
-    var sortTools = function(){
+    sortTools = function(){
 
         yepnope({
             test: Modernizr.draganddrop,
@@ -81,23 +106,23 @@ var palmares = (function () {
 
                     });
                     votes["order"] = order;
-                    doAjax("sort", votes, null);
+                    doAjax("sort", votes, votes["cat"]);
                 });
             }
         });
 
-    };
+    },
 
-    var ajaxCategorie = function (fields) {
+    ajaxCategorie = function (fields) {
         var values = {};
         $(fields).each(function(){
             values[ $(this).data("id") ] =  $(this).val();
         });
 
         doAjax("add_categorie", values, "last");
-    };
+    },
 
-    var ajaxTool = function (fields) {
+    ajaxTool = function (fields) {
         var values = {};
         $(fields).each(function(){
             values[ $(this).data("id") ] =  $(this).val();
@@ -106,17 +131,17 @@ var palmares = (function () {
 
         doAjax("add_tool", values, values["cat"]);
 
-    };
+    },
 
-    var ajaxApproveCat = function ($cat){
+    ajaxApproveCat = function ($cat){
         var values = {};
         values["cat"] =  $cat.data("cat");
 
         doAjax("approve_categorie", values, values["cat"]);
 
-    };
+    },
 
-    var validate = function ($form, next){
+    validate = function ($form, next){
         $form.submit(function(e) {
             e.preventDefault();
             var error = 0;
@@ -143,23 +168,23 @@ var palmares = (function () {
                 next( fields );
             }
         });
-    };
+    },
 
-    var addCategorie = function (context) {
+    addCategorie = function (context) {
         var $form = $(context).find(".addcategorie");
 
         validate($form, ajaxCategorie);
 
-    };
+    },
 
-    var addTool = function (context) {
+    addTool = function (context) {
         var $form = $(context).find(".addtool");
 
         validate($form, ajaxTool);
 
-    };
+    },
 
-    var approveCategories = function (context) {
+    approveCategories = function (context) {
         var $btn = $(context).find(".box.notApproved h3 a");
 
         $btn.click(function(e){
@@ -168,6 +193,127 @@ var palmares = (function () {
             console.log($cat);
             ajaxApproveCat($cat);
         });
+    },
+
+    approveCategories = function (context) {
+        var $btn = $(context).find(".box.notApproved h3 a");
+
+        $btn.click(function(e){
+            e.preventDefault();
+            var $cat = $(this).parents(".box.notApproved");
+            console.log($cat);
+            ajaxApproveCat($cat);
+        });
+    },
+
+    socketIO = function (context) {
+        var socket = io.connect();
+        var uniqueId = 0;
+        function checkIfCurentUser(userId, cb){
+            if( userId !== $("#container").attr("data-user-id") ){
+                cb();
+            }
+        }
+
+        function drawMessage(id, className, msg){
+            $('#socketMsg').append("<span class='"+className+" uniqueId-"+id+"'>"+msg+"</span>");
+            setTimeout(function(){
+                $('#socketMsg').find(".uniqueId-"+id).addClass("active");
+            },100);
+            setTimeout(function(){
+                $('#socketMsg').find(".uniqueId-"+id).addClass("removing");
+                setTimeout(function(){
+                    $('#socketMsg').find(".uniqueId-"+id).remove();
+                },1000);
+            },10000);
+        }
+
+        function userConnect(userId, connectMsg){
+            uniqueId = uniqueId+1;
+            console.log(connectMsg);
+            if(connectMsg !== undefined){
+                var cb = function(){
+                    drawMessage(uniqueId, "connect", connectMsg);
+                }
+                checkIfCurentUser(userId, cb);
+            }
+        }
+        function toolAdded(userId, toolAddedMsg){
+            uniqueId = uniqueId+1;
+            console.log(toolAddedMsg);
+            if(toolAddedMsg !== undefined){
+                var cb = function(){
+                    drawMessage(uniqueId, "toolAdded", toolAddedMsg);
+                }
+                checkIfCurentUser(userId, cb);
+            }
+        }
+        function catAdded(userId, catAddedMsg){
+            uniqueId = uniqueId+1;
+            console.log(catAddedMsg);
+            if(catAddedMsg !== undefined){
+                var cb = function(){
+                    drawMessage(uniqueId, "catAdded", catAddedMsg);
+                }
+                checkIfCurentUser(userId, cb);
+            }
+        }
+        function vote(userId, voteMsg){
+            uniqueId = uniqueId+1;
+            console.log(voteMsg);
+            if(voteMsg !== undefined){
+                var cb = function(){
+                    drawMessage(uniqueId, "vote", voteMsg);
+                }
+                checkIfCurentUser(userId, cb);
+            }
+        }
+        function updateUsers(usersArray){
+
+            console.log(usersArray);
+            var $currentUserEls = $("#socketUsers span");
+
+            $currentUserEls.each(
+                function(){
+                    var toRemove = 1;
+                    for(var i=0;i>usersArray.length;i++){
+                        if(usersArray[i].id.toString() === $(this).attr("data-id") ){
+                            toRemove = 0;
+                            usersArray.splice(i,1);
+                        }
+                    }
+                    if(toRemove){
+                        console.log("remove "+ $(this).attr("data-id"));
+                        $(this).addClass("removing");
+                        setTimeout(function(){
+                            $(this).remove();
+                        },1000);
+                        this.remove();
+                    }
+                }
+            );
+
+            console.log(usersArray, usersArray.length);
+
+            for(var i=0;i<usersArray.length;i++){
+                uniqueId = uniqueId+1;
+                var id = uniqueId;
+                $('#socketUsers').append("<span data-id='"+usersArray[i].id+"' class='uniqueId-"+id+"'><span class='icon'>Online</span>"+usersArray[i].username+"</span>");
+                setTimeout(function(){
+                    $('#socketUsers').find(".uniqueId-"+id).addClass("active");
+                },100);
+            }
+
+
+        }
+
+
+
+        socket.on('userConnect', $.debounce( 250, true, userConnect));
+        socket.on('toolAdded', $.debounce( 250, true, toolAdded));
+        socket.on('catAdded', $.debounce( 250, true, catAdded));
+        socket.on('vote', $.debounce( 250, true, vote));
+        socket.on('updateUsers', $.debounce( 250, true, updateUsers));
     };
 
     return {
@@ -176,7 +322,8 @@ var palmares = (function () {
             addTool: addTool,
             sortTools: sortTools,
             getCategorie: getCategorie,
-            approveCategories: approveCategories
+            approveCategories: approveCategories,
+            socketIO:socketIO
         }
     }
 })();
@@ -189,8 +336,6 @@ $.enhance(palmares.handler.addCategorie, {
     title: "adding Categorie",
     group: "connected"
 });
-
-
 
 $.enhance(palmares.handler.addTool, {
     id: "ajaxAddTool",
@@ -215,6 +360,14 @@ $.enhance(palmares.handler.approveCategories, {
     title: "approving Categorie",
     group: "admin"
 });
+
+$.enhance(palmares.handler.socketIO, {
+    id: "socketIO",
+    title: "socketIO Initialisation",
+    group: "socketIO"
+});
+
+
 
 
 
