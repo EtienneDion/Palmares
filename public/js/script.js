@@ -288,7 +288,6 @@ var palmares = (function () {
                         setTimeout(function(){
                             $(this).remove();
                         },1000);
-                        this.remove();
                     }
                 }
             );
@@ -366,9 +365,6 @@ $.enhance(palmares.handler.socketIO, {
     title: "socketIO Initialisation",
     group: "socketIO"
 });
-
-
-
 
 
 

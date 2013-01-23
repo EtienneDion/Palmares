@@ -23,21 +23,22 @@ module.exports = function(app, bd){
     };
 
 
-    function isAdmin(id, next) {
+    function isAdmin(id, next, next2) {
+
         app.users.findOne({ id:id }, function(err, user) {
             if(err === null) {
-                console.log(user);
+                //console.log(user);
                 if(user !== null && user !== undefined){
                     if(user.admin){
-                        next(true);
+                        next(true, next2);
                     } else {
-                        next(false);
+                        next(false, next2);
                     }
                 } else {
-                    next(false);
+                    next(false, next2);
                 }
             }  else {
-                next(false);
+                next(false, next2);
             }
 
         });
@@ -59,8 +60,8 @@ module.exports = function(app, bd){
 
     function getUsername(id){
 
-        for(var i=0;i<=app.currentUsers.length;i++){
-            if(app.currentUsers[i]["id"].toString() === id.toString()){
+        for(var i=0;i<app.currentUsers.length;i++){
+            if(app.currentUsers[i]["id"] === id){
               return app.currentUsers[i]["username"];
             }
         }
@@ -103,7 +104,6 @@ module.exports = function(app, bd){
 
         for(var i=0;i<app.data.length;i++){
 
-            //console.log(app.data[i]["id"] ,app.data[i]["name"], cat, ( app.data[i]["id"].toString() === cat.toString() ) );
             if(app.data[i]["id"].toString() === cat.toString()){
                 return app.data[i]["name"];
             }
@@ -114,7 +114,7 @@ module.exports = function(app, bd){
 
         for(var i=0;i<app.data.length;i++){
             for(var y=0;y<app.data[i].tools.length;y++){
-                //console.log(app.data[i].tools[y]["id"] ,app.data[i].tools[y]["name"], cat, ( app.data[i].tools[y].toString() === cat.toString() ) );
+
                 if(app.data[i].tools[y]["id"].toString() === id.toString()){
                     return app.data[i].tools[y]["name"];
                 }
@@ -131,131 +131,202 @@ module.exports = function(app, bd){
         return userId;
     }
 
-    function getData( userId, next ) {
-        app.tools = bd.collection("tools");
-        app.categories = bd.collection("categories");
-        app.votes = bd.collection("votes");
-        var categoriesArray = [];
+    /* functions to get and process data */
 
-        var categoriesList;
-        var toolsList = app.tools.find();
-        var votesList;
+    function chooseCategorieSearchParam(userId, cb, next){
+        var param;
 
-        function process(admin){
-            console.log("isAdmin: "+admin, " / userId: "+userId);
+        var go = function(admin, cb2){
             if(admin){
-                categoriesList = app.categories.find();
+                param  = { $or:[ { approved:1 }, { $and:[{ approved:0, createdby:userId || 0 }] } ] };
             } else {
-                categoriesList = app.categories.find({ $or:[ { approved:1 }, { $and:[{ approved:0, createdby:userId || 0 }] } ] });
+                param = {};
             }
 
-            if(userId !== null){
-                votesList = app.votes.find({ user:userId });
-            } else {
-                votesList = app.votes.find();
-            }
-
-            categoriesList.forEach(function(x){
-                categoriesArray.push({name:x.name, id:x.id, approved:x.approved, createdtime:x.createdtime });
-            }, function(){
-
-                var toolsArray = [];
-
-
-                toolsList.forEach(function(y){
-                    toolsArray.push({name:y.name, id:y.id, cat:y.categorie, createdtime:y.createdtime });
-                }, function(){
-                    var note = 0,
-                        votesArray = [];
-
-
-                    votesList.forEach(function(z){
-
-                        votesArray.push({ id:z.id, pos: z.pos, time:z.time });
-
-                            //console.log("/// " +new Date( z.time - milliSecondSinceLastWeek) );
-
-
-                    }, function(){
-
-                        for(var i=0;i < categoriesArray.length; i++){
-                            var currentTools =[];
-                            var nbOfTools = 0;
-                            var nbOfLastWeekTools = 0;
-                            //console.log("i:", i);
-                            for(var j=0;j < toolsArray.length; j++){
-
-                                if(toolsArray[j].cat === categoriesArray[i].id){
-                                    nbOfTools++;
-                                    console.log(toolsArray[j].createdtime,  new Date(toolsArray[j].createdtime ), new Date(now - milliSecondSinceLastWeek)  , ( new Date( toolsArray[j].createdtime  ) < new Date(now - milliSecondSinceLastWeek) ) );
-                                    if( new Date( toolsArray[j].createdtime  ) < new Date(now - milliSecondSinceLastWeek)){
-                                        nbOfLastWeekTools++;
-                                    }
-                                }
-
-                            }
-
-                            for(var l=0;l < toolsArray.length; l++){
-
-
-                                if(toolsArray[l].cat === categoriesArray[i].id){
-
-                                    var note=0;
-                                    var lastWeekNote = 0;
-                                    for(var m=0;m < votesArray.length; m++){
-                                        if(toolsArray[l].id === votesArray[m].id){
-                                            var tempNote = nbOfTools+1 - votesArray[m].pos;
-                                            var lastWeekTempNote = nbOfLastWeekTools+1 - votesArray[m].pos;
-
-                                            note = note + tempNote;
-
-                                            if( new Date(votesArray[m].time) < new Date(now - milliSecondSinceLastWeek)){
-                                                    // this is incorrect we need to calculate from the nmber of tool taht was there last week
-                                                    lastWeekNote = lastWeekNote + lastWeekTempNote;
-
-                                            }
-
-
-                                        }
-
-                                    }
-                                    toolsArray[l].note = note;
-                                    toolsArray[l].status = "normal";
-
-                                    if( new Date( toolsArray[l].createdtime  ) < new Date(now - milliSecondSinceLastWeek)){
-
-                                        if(note-4 > lastWeekNote){
-                                            toolsArray[l].status = "hot";
-                                        }
-                                        if(note+4 < lastWeekNote){
-                                            toolsArray[l].status = "cold";
-                                        }
-                                        console.log(toolsArray[l].note, lastWeekNote, toolsArray[l].status);
-                                    }
-                                    currentTools.push(toolsArray[l]);
-                                }
-                            }
-
-                            currentTools = sortByProp(currentTools, "note");
-
-                            categoriesArray[i].tools = currentTools;
-
-                        }
-                        // console.log(categoriesArray);
-                        app.data = categoriesArray;
-
-                        next();
-
-
-                    });
-                });
-            });
+            cb2(userId, param, next);
         }
 
-        isAdmin(userId, process);
+        isAdmin(userId, go, cb);
 
     }
 
+    function getCategories(userId, param, next){
+
+        var categoriesArray = [];
+
+        app.categories = bd.collection("categories");
+
+        var categoriesList;
+
+        categoriesList = app.categories.find( param );
+
+        categoriesList.forEach(function(x){
+            categoriesArray.push({name:x.name, id:x.id, approved:x.approved, createdtime:x.createdtime });
+        }, function(){
+
+            getTools(userId, categoriesArray, next);
+
+        });
+    }
+
+    function getTools(userId, categoriesArray, next){
+
+        app.tools = bd.collection("tools");
+        var toolsList = app.tools.find();
+
+        var toolsArray = [];
+        toolsList.forEach(function(y){
+            toolsArray.push({name:y.name, id:y.id, cat:y.categorie, createdtime:y.createdtime });
+        }, function(){
+            var note = 0,
+                votesArray = [];
+
+            getVotes(userId, categoriesArray, toolsArray, next);
+
+        });
+    }
+
+    function chooseVotesSearchParam(userId){
+        var param;
+
+        if(userId !== null){
+            param  = { user:userId };
+        } else {
+            param = {};
+        }
+
+        return param;
+    }
+
+    function getVotes(userId, categoriesArray, toolsArray, next){
+
+        app.votes = bd.collection("votes");
+        var votesList;
+        var votesArray = [];
+
+        votesList = app.votes.find( chooseVotesSearchParam(userId) );
+
+        votesList.forEach(function(z){
+
+            votesArray.push({ id:z.id, pos: z.pos, time:z.time });
+
+        }, function(){
+
+            saveData(categoriesArray, toolsArray, votesArray, next);
+
+        });
+    }
+
+
+    function processCategories(categoriesArray, toolsArray, votesArray){
+        for(var i=0;i < categoriesArray.length; i++){
+
+            var nbOfToolsValues = getNbOfTools(categoriesArray[i], toolsArray);
+            var nbOfTools = nbOfToolsValues.current;
+            var nbOfLastWeekTools = nbOfToolsValues.lastweek;
+
+            var currentTools = processTools(categoriesArray[i], toolsArray, nbOfTools, nbOfLastWeekTools, votesArray);
+            currentTools = sortByProp(currentTools, "note");
+
+            categoriesArray[i].tools = currentTools;
+
+        }
+
+        return categoriesArray;
+    }
+
+    function processTools(categorie, toolsArray, nbOfTools, nbOfLastWeekTools, votesArray){
+        var currentTools =[];
+        for(var l=0;l < toolsArray.length; l++){
+
+            if(toolsArray[l].cat === categorie.id){
+
+                var notes = calculateNote(toolsArray[l], votesArray, nbOfTools, nbOfLastWeekTools);
+                toolsArray[l].note = notes.current;
+
+                toolsArray[l].status = checkStatus(toolsArray[l], notes.current, notes.lastweek);
+
+                currentTools.push(toolsArray[l]);
+            }
+        }
+        return currentTools;
+    }
+
+    function getNbOfTools(categorie, toolsArray){
+        var nbOfTools = 0;
+        var nbOfLastWeekTools = 0;
+
+        for(var j=0;j < toolsArray.length; j++){
+
+            if(toolsArray[j].cat === categorie.id){
+                nbOfTools++;
+                if( new Date( toolsArray[j].createdtime  ) < new Date(now - milliSecondSinceLastWeek)){
+                    nbOfLastWeekTools++;
+                }
+            }
+        }
+        var nbOfTools = { current:nbOfTools, lastweek:nbOfLastWeekTools };
+        return nbOfTools;
+    }
+
+    function calculateNote(tool, votesArray, nbOfTools, nbOfLastWeekTools){
+        var note=0;
+        var lastWeekNote = 0;
+        for(var m=0;m < votesArray.length; m++){
+            if(tool.id === votesArray[m].id){
+
+                var vote = calculateVoteValues(nbOfTools,nbOfLastWeekTools, votesArray[m]);
+                note = note + vote.current;
+                if(vote.lastweek !== null){
+                    lastWeekNote = lastWeekNote + vote.lastweek;
+                }
+            }
+        }
+        var notes = { current:note, lastweek:lastWeekNote };
+        return notes;
+    }
+
+    function calculateVoteValues(nbOfTools,nbOfLastWeekTools, vote){
+        var tempNote = nbOfTools+1 - vote.pos;
+        var lastWeekTempNote = nbOfLastWeekTools+1 - vote.pos;
+
+        if( new Date(vote.time) > new Date(now - milliSecondSinceLastWeek) ){
+            lastWeekTempNote = null;
+        }
+
+        var voteValues = { current:tempNote, lastweek:lastWeekTempNote };
+        return voteValues;
+    }
+
+    function checkStatus(tool, note, lastWeekNote){
+        var status = "normal";
+
+        if( new Date( tool.createdtime  ) < new Date(now - milliSecondSinceLastWeek)){
+
+            if(note-4 > lastWeekNote){
+                status = "hot";
+            }
+            if(note+4 < lastWeekNote){
+                status = "cold";
+            }
+        }
+
+        return status;
+    }
+
+    function saveData(categoriesArray, toolsArray, votesArray, next){
+
+        app.data = processCategories(categoriesArray, toolsArray, votesArray);
+
+        next();
+    }
+
+    function getData( userId, next ) {
+
+        chooseCategorieSearchParam(userId, getCategories, next);
+
+    }
+    /* End functions to get and process data */
 
     function addCategorie(name, userId, cb){
         app.categories.count( function(error, count){
@@ -285,76 +356,169 @@ module.exports = function(app, bd){
         });
     }
 
-    function vote(userId, cat, order, cb){
-        app.votes = bd.collection("votes");
+    /* functions for voting */
+    function processVotes(userId, cat, votes, allPreviousVotes, cb){
 
-        // send socket message if change of more than 3 pos
-        var beforeAllUserList = [];
-        var beforeMyList = [];
-        var beforeList = [];
-        var before = app.votes.find({ cat:parseInt(cat) });
+        var previousVotesAllUsers = [];
 
+        allPreviousVotes.forEach(function(x){
 
-        before.forEach(function(x){
+            previousVotesAllUsers.push({ id:x.id, pos:x.pos, user:x.user });
 
-            beforeAllUserList.push({pos:x.pos, id:x.id});
-            if(x.user === userId){
-                beforeMyList.push({pos:x.pos, id:x.id});
-            }
         }, function(){
 
+            var previousVotes = processPreviousVotes(userId, previousVotesAllUsers);
 
-            if(beforeMyList.length > 0){
-                beforeList = beforeMyList;
-            } else {
-                beforeList = beforeAllUserList;
+            sortVotes(previousVotes);
+
+            var highlights = findHighlightsVotes( userId, votes, previousVotes );
+
+            processHighlights(highlights);
+
+            cb();
+        });
+    }
+
+    function checkIfUserAlreadyVote(previousVotesAllUsers, previousVotesCurrentUser){
+        var previousVotes = [];
+        if(previousVotesCurrentUser.length > 0){
+            previousVotes = previousVotesCurrentUser;
+        } else {
+            previousVotes = previousVotesAllUsers;
+        }
+        return previousVotes;
+    }
+
+    function processPreviousVotes(userId, previousVotesAllUsers){
+        var previousVotesCurrentUser = [];
+
+        for(var i=0;i<previousVotesAllUsers.length;i++){
+
+            var vote = previousVotesAllUsers[i];
+            if(vote.user === userId){
+                previousVotesCurrentUser.push({ id:vote.id, pos:vote.pos, user:vote.user});
             }
+        }
 
-            var beforeSorted = sortByProp(beforeList, "pos");
-            beforeList.reverse();
+        return checkIfUserAlreadyVote(previousVotesAllUsers, previousVotesCurrentUser);
+    }
 
-            for(var i=0; i < order.length; i++ ){
-                //console.log( beforeSorted[i].id.toString(), order[i].id.toString(), (beforeSorted[i].id.toString() !== order[i].id.toString()) );
+    function sortVotes(previousVotes){
+        sortedVotes = sortByProp(previousVotes, "pos");
+        sortedVotes.reverse();
+        return sortedVotes
+    }
 
-                if(beforeSorted[i]){
+    function findHighlightsVotes(userId, votes, previousVotes){
+        var highlights = [];
+        for(var currentPosition=0; currentPosition < votes.length; currentPosition++ ){
 
-                    if(beforeSorted[i].id.toString() !== order[i].id.toString()){
+            if(previousVotes[currentPosition]){
+                if(previousVotes[currentPosition].id.toString() !== votes[currentPosition].id.toString()){
 
-                        for(var y=0; y < order.length; y++ ){
-
-                               if(beforeSorted[y]){
-                                   if(beforeSorted[y].id.toString() === order[i].id.toString()){
-
-                                       if( (i+1 - beforeSorted[y].pos) > 3 ){
-                                           app.functions.socketEmit("vote", userId, getUsername(userId) +" has just lower '"+ getToolName(beforeSorted[y].id) +"' of "+ (i+1 - beforeSorted[y].pos) +" positions" );
-                                       }
-
-                                       if( (i+1 - beforeSorted[y].pos) < -3 ){
-                                           app.functions.socketEmit("vote", userId, getUsername(userId) +" has just raise '"+ getToolName(beforeSorted[y].id) +"' of "+ (-(i+1 - beforeSorted[y].pos)) +" positions" );
-                                       }
-                                   }
-                               }
-                        }
-
+                    var highlight = findBeforeAndAfterVotesToCompare(userId, votes, previousVotes, currentPosition );
+                    if(highlight.length > 0){
+                        highlights.push( highlight );
                     }
                 }
             }
-        });
+        }
+        return highlights;
+    }
 
+    function findBeforeAndAfterVotesToCompare(userId, currentTools, previousTools, currentPosition){
+        var highlights = [];
+        for(var y=0; y <= currentTools.length; y++ ){
+            if(previousTools[y]){
+                if(previousTools[y].id.toString() === currentTools[currentPosition].id.toString()){
+
+
+                    var highlight = comparePositions(userId, previousTools[y].id, (currentPosition+1 - previousTools[y].pos) );
+                    if(highlight.length > 0){
+                        highlights.push( highlight );
+                    }
+                }
+            }
+        }
+        return highlights;
+    }
+
+    function comparePositions(userId, id, positionOffset){
+
+        var highlights = [];
+        if( positionOffset > 3 ){
+            highlights.push({user:userId, change:"lower", name:getToolName(id), positions:positionOffset });
+        }
+
+        if( positionOffset < -3 ){
+            highlights.push({user:userId, change:"raise", name:getToolName(id), positions:-positionOffset });
+        }
+
+        return highlights;
+    }
+
+    function processHighlights(highlights){
+        console.log("@@@",highlights);
+        var preventDuplicate ="";
+
+        for(var x=0;x<highlights.length;x++){
+            for(var y=0;y<highlights[x].length;y++){
+                for(var i=0;i<highlights[x][y].length;i++){
+
+                    if( preventDuplicate !== highlights[x][y][i].name ){
+                        emitVotesHighlight(highlights[x][y][i].user, highlights[x][y][i].change, highlights[x][y][i].name, highlights[x][y][i].positions);
+                        preventDuplicate = highlights[x][y][i].name;
+                    }
+                }
+            }
+        }
+    }
+
+    function vote(userId, cat, votes, cb){
+
+        app.votes = bd.collection("votes");
+
+        var   allPreviousVotes = app.votes.find({ cat:parseInt(cat) });
+
+        var callback2 = function(){
+            saveVotes(userId, votes, cat);
+        }
+
+        var callback = function(){
+            clearCurrentUserVotes( userId, cat, callback2);
+        }
+
+        processVotes(userId, cat, votes, allPreviousVotes, callback );
+
+        cb(userId);
+    }
+
+    /* End functions for voting */
+
+    /* functions for socket.io */
+    function emitVotesHighlight(userId, change, name, position){
+        socketEmit("vote", userId, getUsername(userId) +" has just "+change+" '"+ name +"' of "+ position +" positions" );
+    }
+
+    function clearCurrentUserVotes(userId, cat, cb){
         app.votes.remove({ cat:parseInt(cat), user:userId });
 
-        for(var i=0; i < order.length; i++ ){
-            /*
-            console.log("{ id:"+ order[i].id
-                +",pos:"+ (i+1)
-                +",cat:"+ cat
-                +",user:"+ userId
-                +",time:"+now
-                +"}");
+        cb();
+    }
 
-              */
+    function saveVotes(userId, votes, cat){
+        for(var i=0; i < votes.length; i++ ){
+
+            console.log("vote", {
+                id: parseInt(votes[i].id),
+                pos: (i+1),
+                cat:parseInt(cat),
+                user:userId,
+                time:now
+            });
+
             app.votes.insert({
-                id: parseInt(order[i].id),
+                id: parseInt(votes[i].id),
                 pos: (i+1),
                 cat:parseInt(cat),
                 user:userId,
@@ -362,12 +526,7 @@ module.exports = function(app, bd){
             });
 
         }
-
-
-
-        cb(userId);
     }
-
 
     var socketInitiated = 0;
     var socketConnection;
@@ -395,5 +554,7 @@ module.exports = function(app, bd){
     function socketUpdateUsers(){
         socketConnection.broadcast.emit("updateUsers", app.currentUsers );
     }
+    /* End functions for socket.io */
+
 
 }
