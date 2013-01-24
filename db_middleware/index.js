@@ -6,6 +6,7 @@ module.exports = function(app, bd){
         find:find,
         count:count,
         insert:insert,
+        update:update,
         remove:remove,
         forEach:forEach
     };
@@ -32,8 +33,11 @@ module.exports = function(app, bd){
     }
 
     function insert(table, param){
-        console.log(param);
         table.insert(param);
+    }
+
+    function update(table, param, vars, cb){
+        table.update(param, vars, cb);
     }
 
     function remove(table, param){

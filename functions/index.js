@@ -9,6 +9,7 @@ module.exports = function(app){
         addCategorie:addCategorie,
         addTool:addTool,
         vote:vote,
+        approuveCat:approuveCat,
         socketInit:socketInit,
         socketEmit:socketEmit,
         socketUpdateUsers:socketUpdateUsers
@@ -412,6 +413,27 @@ module.exports = function(app){
     }
 
     /* End functions for voting */
+
+
+    function approuveCat(userId, cat, next, next){
+
+        var vars = { userId:userId, cat:cat, next:next}
+        var cb = function(vars){
+
+            var userId = vars.userId;
+            var cat = vars.cat;
+
+            var cb2 = function(userId, cat, next){
+                next(cat);
+            }
+
+            app.functions.getData(userId, cb2);
+        }
+
+        app.db_middleware.update(app.categories, { id: parseInt(cat) },{ $set: { approved:1 }}, vars, cb);
+        app.categories.update({ id: parseInt(cat) },{ $set: { approved:1 }}, null, cb);
+
+    }
 
     /* functions for socket.io */
     function emitVotesHighlight(userId, change, name, position){

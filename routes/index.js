@@ -167,17 +167,12 @@ module.exports = function(app){
 
         var cat = req.body.cat;
 
-        var next = function(){
-            var userId = app.utils.getUserId(req.user);
-            console.log("user : "+userId, "approved cat : "+ parseInt(cat));
-            app.functions.getData(userId,next2);
-        };
+        var userId = app.utils.getUserId(req.user);
 
-        var next2 = function(){
+        var next = function(cat){
             res.render('ajax', { result: "ok", cat:parseInt(cat) });
         };
 
-        app.categories.update({ id: parseInt(cat) },{ $set: { approved:1 }}, null, next);
-
+        app.functions.approuveCat(userId, cat, next);
     }
 };
