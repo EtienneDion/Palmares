@@ -85,23 +85,23 @@ form{
     right:10px;
     width: 400px;
     span{
-        height: 15px;
+        min-height: 15px;
         opacity: 0.3;
         margin-top:3px;
         width:380px;
         display:block;
 
         /* Firefox */
-        -moz-transition: all 1s ease;
+        -moz-transition: all 0.3s ease;
         /* WebKit */
-        -webkit-transition: all 1s ease;
+        -webkit-transition: all 0.3s ease;
         /* Opera */
-        -o-transition: all 1s ease;
+        -o-transition: all 0.3s ease;
         /* Standard */
-        transition: all 1s ease;
+        transition: all 0.3s ease;
     }
     .active{
-        height: 20px;
+        min-height: 20px;
         opacity: 1;
         /* Firefox */
         -moz-transform: translate(0,5px);

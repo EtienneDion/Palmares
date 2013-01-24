@@ -209,6 +209,7 @@ var palmares = (function () {
     socketIO = function (context) {
         var socket = io.connect();
         var uniqueId = 0;
+
         function checkIfCurentUser(userId, cb){
             if( userId !== $("#container").attr("data-user-id") ){
                 cb();
@@ -238,6 +239,7 @@ var palmares = (function () {
                 checkIfCurentUser(userId, cb);
             }
         }
+
         function toolAdded(userId, toolAddedMsg){
             uniqueId = uniqueId+1;
             console.log(toolAddedMsg);
@@ -248,6 +250,7 @@ var palmares = (function () {
                 checkIfCurentUser(userId, cb);
             }
         }
+
         function catAdded(userId, catAddedMsg){
             uniqueId = uniqueId+1;
             console.log(catAddedMsg);
@@ -258,6 +261,7 @@ var palmares = (function () {
                 checkIfCurentUser(userId, cb);
             }
         }
+
         function vote(userId, voteMsg){
             uniqueId = uniqueId+1;
             console.log(voteMsg);
@@ -268,45 +272,49 @@ var palmares = (function () {
                 checkIfCurentUser(userId, cb);
             }
         }
+
         function updateUsers(usersArray){
 
-            console.log(usersArray);
-            var $currentUserEls = $("#socketUsers span");
+            var $currentUserEls = $("#socketUsers > span");
+            console.log("1",usersArray);
+            for(var i=0;i<usersArray.length;i++){
+                if(usersArray[i].id.toString() === $("#container").attr("data-user-id") || usersArray[i].id.toString() === $("#container").data("user-id")){
+                    usersArray.splice(i,1);
+                }
+            }
 
             $currentUserEls.each(
                 function(){
                     var toRemove = 1;
-                    for(var i=0;i>usersArray.length;i++){
-                        if(usersArray[i].id.toString() === $(this).attr("data-id") ){
+                    var $this = $(this);
+
+                    for(var i=0;i<usersArray.length;i++){
+                        if(usersArray[i].id.toString() === $this.attr("data-id") || usersArray[i].id.toString() === $this.data("id")){
                             toRemove = 0;
                             usersArray.splice(i,1);
                         }
                     }
                     if(toRemove){
-                        console.log("remove "+ $(this).attr("data-id"));
-                        $(this).addClass("removing");
+                        console.log("remove "+ $this.attr("data-id"));
+                        $this.addClass("removing");
                         setTimeout(function(){
-                            $(this).remove();
-                        },1000);
+                            $this.remove();
+                        },300);
                     }
                 }
             );
 
-            console.log(usersArray, usersArray.length);
 
             for(var i=0;i<usersArray.length;i++){
                 uniqueId = uniqueId+1;
                 var id = uniqueId;
+
                 $('#socketUsers').append("<span data-id='"+usersArray[i].id+"' class='uniqueId-"+id+"'><span class='icon'>Online</span>"+usersArray[i].username+"</span>");
                 setTimeout(function(){
                     $('#socketUsers').find(".uniqueId-"+id).addClass("active");
                 },100);
             }
-
-
         }
-
-
 
         socket.on('userConnect', $.debounce( 250, true, userConnect));
         socket.on('toolAdded', $.debounce( 250, true, toolAdded));

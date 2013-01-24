@@ -19,7 +19,7 @@ module.exports = function(app){
 
     function index(req, res, next){
 
-        var userId = app.functions.getUserId(req.user);
+        var userId = app.utils.getUserId(req.user);
 
         var next = function(){
             res.render('index', {   user: req.user, data: app.data, view: "user"    });
@@ -34,7 +34,7 @@ module.exports = function(app){
             res.render('index', {   user: req.user, data: app.data, view: "global"    });
         };
 
-        var userId = app.functions.getUserId(req.user);
+        var userId = app.utils.getUserId(req.user);
         //console.log("user : "+userId);
         app.functions.getData(null, next);
 
@@ -63,11 +63,9 @@ module.exports = function(app){
             res.redirect('/');
         }
 
-        var userId = app.functions.getUserId(req.user);
+        var userId = app.utils.getUserId(req.user);
 
-        app.functions.logoutUser(userId, cb);
-
-
+        app.utils.logoutUser(userId, cb);
 
     }
 
@@ -75,7 +73,7 @@ module.exports = function(app){
         var name = req.body.name;
         if(name !== "" && name !== undefined && name !== null ){
 
-            var userId = app.functions.getUserId(req.user);
+            var userId = app.utils.getUserId(req.user);
 
             var cb = function(userId, count){
                 var next = function(){
@@ -85,7 +83,6 @@ module.exports = function(app){
                     app.functions.socketEmit("catAdded", userId, req.user.username +" has just suggest '"+ name +"' as a new category." );
                 };
 
-                console.log("user : "+userId);
                 app.functions.getData(userId, next);
             }
 
@@ -102,7 +99,7 @@ module.exports = function(app){
         var name = req.body.name;
         var url = req.body.url;
         var cat = req.body.cat;
-        var userId = app.functions.getUserId(req.user);
+        var userId = app.utils.getUserId(req.user);
 
         if(name !== "" && name !== undefined && name !== null && url !== "" && url !== undefined && url !== null && cat !== "" && cat !== undefined && cat !== null ){
 
@@ -110,7 +107,7 @@ module.exports = function(app){
                 var next = function(){
                     res.render('ajax', { result: "ok", cat:null });
 
-                    app.functions.socketEmit("toolAdded", userId, req.user.username +" has just added '"+ name +"' in " + app.functions.getCatName(cat) );
+                    app.functions.socketEmit("toolAdded", userId, req.user.username +" has just added '"+ name +"' in " + app.utils.getCatName(cat) );
 
                 };
 
@@ -133,7 +130,6 @@ module.exports = function(app){
         var userId = req.user.id;
         var order = req.body.order;
         var cat = req.body.cat;
-
 
         if(cat !== "" && cat !== undefined && cat !== null  ){
 
@@ -158,12 +154,11 @@ module.exports = function(app){
         var cat = req.body.cat;
 
         var next = function(){
-            console.log("cat: ", parseInt(cat));
             res.render('cat', { user: req.user, data: app.data, cat:parseInt(cat) });
         };
 
-        var userId = app.functions.getUserId(req.user);
-        console.log("user : "+userId);
+        var userId = app.utils.getUserId(req.user);
+
         app.functions.getData(userId,next);
 
     }
@@ -173,13 +168,12 @@ module.exports = function(app){
         var cat = req.body.cat;
 
         var next = function(){
-            var userId = app.functions.getUserId(req.user);
+            var userId = app.utils.getUserId(req.user);
             console.log("user : "+userId, "approved cat : "+ parseInt(cat));
             app.functions.getData(userId,next2);
         };
 
         var next2 = function(){
-            console.log("cat: ", parseInt(cat), app.data);
             res.render('ajax', { result: "ok", cat:parseInt(cat) });
         };
 

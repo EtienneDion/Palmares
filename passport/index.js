@@ -19,7 +19,7 @@ module.exports = function(app, configs, bd){
     });
 
     passport.deserializeUser(function(id, done) {
-        app.functions.findById(id, function (err, user) {
+        app.utils.findById(id, function (err, user) {
             done(err, user);
         }, done);
     });
@@ -38,7 +38,7 @@ module.exports = function(app, configs, bd){
                 // username, or the password is not correct, set the user to `false` to
                 // indicate failure and set a flash message.  Otherwise, return the
                 // authenticated `user`.
-                app.functions.findByUsername(username, function(err, user) {
+                app.utils.findByUsername(username, function(err, user) {
                     if (err) { return done(err); }
                     if (!user) { return done(null, false, { message: 'Unknown user ' + username }); }
                     if (user.password != password) { return done(null, false, { message: 'Invalid password' }); }

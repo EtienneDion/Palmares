@@ -1,18 +1,10 @@
-module.exports = function(app, bd){
+module.exports = function(app){
 
     now = new Date();
     milliSecondSinceLastWeek = 10000; //604800000
 
     return {
         //functions
-        findById:findById,
-        getUsername:getUsername,
-        findByUsername:findByUsername,
-        ensureAuthenticated:ensureAuthenticated,
-        logoutUser:logoutUser,
-        sortByProp:sortByProp,
-        getCatName:getCatName,
-        getUserId:getUserId,
         getData:getData,
         addCategorie:addCategorie,
         addTool:addTool,
@@ -23,113 +15,6 @@ module.exports = function(app, bd){
     };
 
 
-    function isAdmin(id, next, next2) {
-
-        app.users.findOne({ id:id }, function(err, user) {
-            if(err === null) {
-                //console.log(user);
-                if(user !== null && user !== undefined){
-                    if(user.admin){
-                        next(true, next2);
-                    } else {
-                        next(false, next2);
-                    }
-                } else {
-                    next(false, next2);
-                }
-            }  else {
-                next(false, next2);
-            }
-
-        });
-    }
-
-    //auth functions
-    function findById(id, fn, done) {
-
-        app.users.findOne({ id:id }, function(err, user) {
-            if(err === null)       {
-                fn(null, user);
-            }  else {
-                fn(new Error('User ' + id + ' does not exist'));
-                done(null, id);
-            }
-
-        });
-    }
-
-    function getUsername(id){
-
-        for(var i=0;i<app.currentUsers.length;i++){
-            if(app.currentUsers[i]["id"] === id){
-              return app.currentUsers[i]["username"];
-            }
-        }
-    }
-
-    function findByUsername(username, fn) {
-        app.users.findOne({ username:username }, function(err, user) {
-
-            if(err !== null)       {
-                return fn(null, null);
-            }  else {
-                return fn(null, user);
-            }
-
-        });
-    }
-
-    function ensureAuthenticated(req, res, next) {
-        if (req.isAuthenticated()) { return next(); }
-        res.redirect('/login')
-    }
-
-    function logoutUser(id, cb){
-        for(var i=0;i<app.currentUsers.length;i++){
-            if(app.currentUsers[i].id.toString() === id.toString()){
-                app.currentUsers.splice(i,1);
-            }
-        }
-        cb();
-    }
-
-    //sortByProp
-    function sortByProp(array, p){
-        return array.sort(function(a,b){
-            return (a[p] < b[p]) ? 1 : (a[p] > b[p]) ? -1 : 0;
-        });
-    }
-
-    function getCatName(cat){
-
-        for(var i=0;i<app.data.length;i++){
-
-            if(app.data[i]["id"].toString() === cat.toString()){
-                return app.data[i]["name"];
-            }
-        }
-    }
-
-    function getToolName(id){
-
-        for(var i=0;i<app.data.length;i++){
-            for(var y=0;y<app.data[i].tools.length;y++){
-
-                if(app.data[i].tools[y]["id"].toString() === id.toString()){
-                    return app.data[i].tools[y]["name"];
-                }
-            }
-        }
-    }
-
-    function getUserId(user){
-        var userId = null;
-        if(user !== undefined ){
-            userId = user.id;
-        }
-
-        return userId;
-    }
 
     /* functions to get and process data */
 
@@ -137,16 +22,16 @@ module.exports = function(app, bd){
         var param;
 
         var go = function(admin, cb2){
-            if(admin){
+            if(!admin){
                 param  = { $or:[ { approved:1 }, { $and:[{ approved:0, createdby:userId || 0 }] } ] };
             } else {
                 param = {};
             }
-
+            console.log(param);
             cb2(userId, param, next);
         }
 
-        isAdmin(userId, go, cb);
+        app.utils.isAdmin(userId, go, cb);
 
     }
 
@@ -154,36 +39,41 @@ module.exports = function(app, bd){
 
         var categoriesArray = [];
 
-        app.categories = bd.collection("categories");
+        app.categories = app.db_middleware.getCollection("categories");
 
         var categoriesList;
 
-        categoriesList = app.categories.find( param );
+        categoriesList = app.db_middleware.find( app.categories, param );
 
-        categoriesList.forEach(function(x){
-            categoriesArray.push({name:x.name, id:x.id, approved:x.approved, createdtime:x.createdtime });
-        }, function(){
+        var process = function(array, x){
+            array.push({name:x.name, id:x.id, approved:x.approved, createdtime:x.createdtime });
+        }
 
-            getTools(userId, categoriesArray, next);
+        var complete = function(userId, array, next){
+            getTools(userId, array, next);
+        }
 
-        });
+        app.db_middleware.forEach(userId, categoriesList, process, complete, next);
+
     }
 
     function getTools(userId, categoriesArray, next){
 
-        app.tools = bd.collection("tools");
-        var toolsList = app.tools.find();
+        app.tools = app.db_middleware.getCollection("tools");
+        var toolsList = app.db_middleware.find( app.tools, {} );
 
-        var toolsArray = [];
-        toolsList.forEach(function(y){
-            toolsArray.push({name:y.name, id:y.id, cat:y.categorie, createdtime:y.createdtime });
-        }, function(){
-            var note = 0,
-                votesArray = [];
+        var vars = { categoriesArray:categoriesArray };
 
-            getVotes(userId, categoriesArray, toolsArray, next);
+        var process = function(array, x){
+            array.push({name:x.name, id:x.id, cat:x.categorie, createdtime:x.createdtime });
+        }
 
-        });
+        var complete = function(userId, array, next, vars){
+            getVotes(userId, categoriesArray, array, next, vars.categoriesArray);
+        }
+
+        app.db_middleware.forEach(userId, toolsList, process, complete, next, vars);
+
     }
 
     function chooseVotesSearchParam(userId){
@@ -200,21 +90,24 @@ module.exports = function(app, bd){
 
     function getVotes(userId, categoriesArray, toolsArray, next){
 
-        app.votes = bd.collection("votes");
+        app.votes = app.db_middleware.getCollection("votes");
         var votesList;
         var votesArray = [];
 
-        votesList = app.votes.find( chooseVotesSearchParam(userId) );
+        votesList = app.db_middleware.find( app.votes, chooseVotesSearchParam(userId) );
 
-        votesList.forEach(function(z){
+        var vars = { categoriesArray:categoriesArray, toolsArray:toolsArray };
+        var process = function(array, x){
+            array.push({ id:x.id, pos: x.pos, time:x.time });
+        }
 
-            votesArray.push({ id:z.id, pos: z.pos, time:z.time });
+        var complete = function(userId, array, next, vars){
+            saveData(vars.categoriesArray, vars.toolsArray, array, next);
+        }
 
-        }, function(){
+        app.db_middleware.forEach(userId, votesList, process, complete, next, vars);
 
-            saveData(categoriesArray, toolsArray, votesArray, next);
 
-        });
     }
 
 
@@ -226,7 +119,7 @@ module.exports = function(app, bd){
             var nbOfLastWeekTools = nbOfToolsValues.lastweek;
 
             var currentTools = processTools(categoriesArray[i], toolsArray, nbOfTools, nbOfLastWeekTools, votesArray);
-            currentTools = sortByProp(currentTools, "note");
+            currentTools = app.utils.sortByProp(currentTools, "note");
 
             categoriesArray[i].tools = currentTools;
 
@@ -328,46 +221,67 @@ module.exports = function(app, bd){
     }
     /* End functions to get and process data */
 
-    function addCategorie(name, userId, cb){
-        app.categories.count( function(error, count){
-            app.categories.insert({
-                id: count+1,
-                name: name,
-                approved:0,
-                createdby: userId,
-                createdtime:now
-            });
-            cb(userId, count);
-        });
+    function addCategorie(name, userId, next){
+
+        var cb_vars = {};
+        cb_vars.name = name;
+        cb_vars.userId = userId;
+        cb_vars.next = next;
+        cb_vars.now = now;
+
+        var cb = function(error, count, vars){
+
+            app.db_middleware.insert(app.categories, {
+                                                    id: count+1,
+                                                    name: vars.name,
+                                                    approved:0,
+                                                    createdby: vars.userId,
+                                                    createdtime:vars.now
+                                                });
+
+            vars.next(vars.userId, count);
+        }
+        app.db_middleware.count( app.categories, cb, cb_vars );
     }
 
     function addTool(cat, name, url, userId, cb){
-        app.tools.count( function(error, count){
-            app.tools.insert({
-                id: count+1,
-                name: name,
-                url:url,
-                categorie:parseInt(cat),
-                createdby: userId,
-                createdtime:now
-            });
 
-            cb(userId);
-        });
+        var cb_vars = {};
+        cb_vars.name = name;
+        cb_vars.url = url;
+        cb_vars.userId = userId;
+        cb_vars.cat = cat;
+        cb_vars.next = cb;
+        cb_vars.now = now;
+
+        var cb2 = function(error, count, vars){
+
+            app.db_middleware.insert(app.tools, {
+                                                    id: count+1,
+                                                    name: vars.name,
+                                                    url:vars.url,
+                                                    categorie:parseInt(vars.cat),
+                                                    createdby: vars.userId,
+                                                    createdtime: vars.now
+                                                });
+
+            vars.next(vars.userId);
+        }
+
+        app.db_middleware.count( app.tools, cb2, cb_vars );
+
     }
 
     /* functions for voting */
-    function processVotes(userId, cat, votes, allPreviousVotes, cb){
+    function processVotes(userId, cat, votes, allPreviousVotes, next){
 
-        var previousVotesAllUsers = [];
+        var vars = { cat:cat, votes:votes };
+        var process = function(array, x){
+            array.push({ id:x.id, pos:x.pos, user:x.user });
+        }
+        var complete = function(userId, array, next, vars){
 
-        allPreviousVotes.forEach(function(x){
-
-            previousVotesAllUsers.push({ id:x.id, pos:x.pos, user:x.user });
-
-        }, function(){
-
-            var previousVotes = processPreviousVotes(userId, previousVotesAllUsers);
+            var previousVotes = processPreviousVotes(userId, array);
 
             sortVotes(previousVotes);
 
@@ -375,8 +289,12 @@ module.exports = function(app, bd){
 
             processHighlights(highlights);
 
-            cb();
-        });
+            next();
+
+        }
+
+        app.db_middleware.forEach(userId, allPreviousVotes, process, complete, next, vars);
+
     }
 
     function checkIfUserAlreadyVote(previousVotesAllUsers, previousVotesCurrentUser){
@@ -404,9 +322,9 @@ module.exports = function(app, bd){
     }
 
     function sortVotes(previousVotes){
-        sortedVotes = sortByProp(previousVotes, "pos");
+        sortedVotes = app.utils.sortByProp(previousVotes, "pos");
         sortedVotes.reverse();
-        return sortedVotes
+        return sortedVotes;
     }
 
     function findHighlightsVotes(userId, votes, previousVotes){
@@ -447,18 +365,18 @@ module.exports = function(app, bd){
 
         var highlights = [];
         if( positionOffset > 3 ){
-            highlights.push({user:userId, change:"lower", name:getToolName(id), positions:positionOffset });
+            highlights.push({user:userId, change:"lower", name:app.utils.getToolName(id), positions:positionOffset });
         }
 
         if( positionOffset < -3 ){
-            highlights.push({user:userId, change:"raise", name:getToolName(id), positions:-positionOffset });
+            highlights.push({user:userId, change:"raise", name:app.utils.getToolName(id), positions:-positionOffset });
         }
 
         return highlights;
     }
 
     function processHighlights(highlights){
-        console.log("@@@",highlights);
+
         var preventDuplicate ="";
 
         for(var x=0;x<highlights.length;x++){
@@ -476,9 +394,9 @@ module.exports = function(app, bd){
 
     function vote(userId, cat, votes, cb){
 
-        app.votes = bd.collection("votes");
+        app.votes = app.db_middleware.getCollection("votes");
 
-        var   allPreviousVotes = app.votes.find({ cat:parseInt(cat) });
+        var allPreviousVotes = app.db_middleware.find( app.votes, { cat:parseInt(cat) });
 
         var callback2 = function(){
             saveVotes(userId, votes, cat);
@@ -497,13 +415,14 @@ module.exports = function(app, bd){
 
     /* functions for socket.io */
     function emitVotesHighlight(userId, change, name, position){
-        socketEmit("vote", userId, getUsername(userId) +" has just "+change+" '"+ name +"' of "+ position +" positions" );
+        socketEmit("vote", userId, app.utils.getUsername(userId) +" has just "+change+" '"+ name +"' of "+ position +" positions" );
     }
 
     function clearCurrentUserVotes(userId, cat, cb){
-        app.votes.remove({ cat:parseInt(cat), user:userId });
 
+        app.db_middleware.remove(app.votes, { cat:parseInt(cat), user:userId });
         cb();
+
     }
 
     function saveVotes(userId, votes, cat){
@@ -517,14 +436,13 @@ module.exports = function(app, bd){
                 time:now
             });
 
-            app.votes.insert({
-                id: parseInt(votes[i].id),
-                pos: (i+1),
-                cat:parseInt(cat),
-                user:userId,
-                time:now
-            });
-
+            app.db_middleware.insert(app.votes, {
+                                                    id: parseInt(votes[i].id),
+                                                    pos: (i+1),
+                                                    cat:parseInt(cat),
+                                                    user:userId,
+                                                    time:now
+                                                });
         }
     }
 

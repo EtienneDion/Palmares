@@ -21,12 +21,14 @@ app.eventEmitter = eventEmitter;
 // Get database
 bd = mongolian.db(configs.DB);
 bd.auth(configs.DB_USER, configs.DB_PASS);
+app.db_middleware = require('./db_middleware')(app, bd);
 
-var users = bd.collection("users");
+var users = app.db_middleware.getCollection("users");
 app.users = users;
 app.currentUsers=[];
 // functions
-app.functions = require('./functions')(app, bd);
+app.utils = require('./utils')(app);
+app.functions = require('./functions')(app);
 // auth
 var passport = require('./passport')(app, configs);
 //console.log(app);
@@ -66,7 +68,7 @@ var routes = require('./routes')(app);
 // normal routes
 app.get('/', routes.index);
 app.get('/palmares', routes.palmares);
-app.get('/account', app.functions.ensureAuthenticated, routes.account);
+app.get('/account', app.utils.ensureAuthenticated, routes.account);
 app.post('/', passport.authenticate('local', { failureRedirect: '/admin', failureFlash: true }), routes.indexPost);
 
 // login
@@ -85,14 +87,14 @@ app.get('/auth/linkedin/callback', passport.authenticate('linkedin', { failureRe
 app.get('/auth/github', passport.authenticate('github'), routes.authRedirect);
 app.get('/auth/github/callback', passport.authenticate('github', { failureRedirect: '/login' }), routes.indexPost);
 //logout
-app.get('/logout', app.functions.ensureAuthenticated, routes.logOut);
+app.get('/logout', app.utils.ensureAuthenticated, routes.logOut);
 
 //ajax
-app.post('/ajax/add_categorie', app.functions.ensureAuthenticated, routes.ajaxAddCategorie);
-app.post('/ajax/add_tool', app.functions.ensureAuthenticated, routes.ajaxAddTool);
-app.post('/ajax/sort', app.functions.ensureAuthenticated, routes.ajaxVotes);
-app.post('/ajax/get_categorie', app.functions.ensureAuthenticated, routes.ajaxRefreshCat);
-app.post('/ajax/approve_categorie', app.functions.ensureAuthenticated, routes.ajaxApproveCat);
+app.post('/ajax/add_categorie', app.utils.ensureAuthenticated, routes.ajaxAddCategorie);
+app.post('/ajax/add_tool', app.utils.ensureAuthenticated, routes.ajaxAddTool);
+app.post('/ajax/sort', app.utils.ensureAuthenticated, routes.ajaxVotes);
+app.post('/ajax/get_categorie', app.utils.ensureAuthenticated, routes.ajaxRefreshCat);
+app.post('/ajax/approve_categorie', app.utils.ensureAuthenticated, routes.ajaxApproveCat);
 
 
 
