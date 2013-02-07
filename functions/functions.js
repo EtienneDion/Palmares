@@ -1,7 +1,7 @@
 module.exports = function(app){
 
     now = new Date();
-    milliSecondSinceLastWeek = 10000; //604800000
+    milliSecondSinceLastWeek = 100000; //604800000
 
     return {
         //functions
@@ -14,8 +14,6 @@ module.exports = function(app){
         socketEmit:socketEmit,
         socketUpdateUsers:socketUpdateUsers
     };
-
-
 
     /* functions to get and process data */
 
@@ -99,7 +97,7 @@ module.exports = function(app){
 
         var vars = { categoriesArray:categoriesArray, toolsArray:toolsArray };
         var process = function(array, x){
-            array.push({ id:x.id, pos: x.pos, time:x.time });
+            array.push({ id:x.id, pos: x.pos, time:x.time, current:x.current });
         }
 
         var complete = function(userId, array, next, vars){
@@ -137,15 +135,29 @@ module.exports = function(app){
 
                 var notes = calculateNote(toolsArray[l], votesArray, nbOfTools, nbOfLastWeekTools);
                 toolsArray[l].note = notes.current;
-
+                toolsArray[l].lastweeknote = notes.lastweek;
                 toolsArray[l].status = checkStatus(toolsArray[l], notes.current, notes.lastweek);
 
+                console.log(toolsArray[l].name, "current:"+notes.current, "lastweek:"+notes.lastweek, toolsArray[l].status);
                 currentTools.push(toolsArray[l]);
             }
         }
         return currentTools;
     }
-
+    function ifExistedLastWeek(createdDate){
+        if( new Date(createdDate) < new Date(now - milliSecondSinceLastWeek)){
+            return true;
+        } else {
+            return false;
+        }
+    }
+    function moreRecent(date1, date2){
+        if( new Date(date1) > new Date(date2)){
+            return true;
+        } else {
+            return false;
+        }
+    }
     function getNbOfTools(categorie, toolsArray){
         var nbOfTools = 0;
         var nbOfLastWeekTools = 0;
@@ -154,7 +166,7 @@ module.exports = function(app){
 
             if(toolsArray[j].cat === categorie.id){
                 nbOfTools++;
-                if( new Date( toolsArray[j].createdtime  ) < new Date(now - milliSecondSinceLastWeek)){
+                if( ifExistedLastWeek( toolsArray[j].createdtime ) ){
                     nbOfLastWeekTools++;
                 }
             }
@@ -166,42 +178,90 @@ module.exports = function(app){
     function calculateNote(tool, votesArray, nbOfTools, nbOfLastWeekTools){
         var note=0;
         var lastWeekNote = 0;
+
+        var classifiedVotes = [];
+
         for(var m=0;m < votesArray.length; m++){
             if(tool.id === votesArray[m].id){
 
-                var vote = calculateVoteValues(nbOfTools,nbOfLastWeekTools, votesArray[m]);
+                var stored =0;
+                for(var p=0;p < classifiedVotes.length; p++){
+                    if(classifiedVotes[p].id === tool.id){
+                        classifiedVotes[p].votes.push({ pos:votesArray[m].pos, time:votesArray[m].time, current:votesArray[m].current });
+                        stored=1;
+                    }
+                }
+                if(!stored){
+                    classifiedVotes.push({ id:tool.id, votes:[{ pos:votesArray[m].pos, time:votesArray[m].time, current:votesArray[m].current }] });
+                }
+
+            }
+        }
+
+        for(var t=0;t < classifiedVotes.length; t++){
+            if(tool.id === classifiedVotes[t].id){
+                //console.log(classifiedVotes[t]);
+                var vote = calculateVoteValues(nbOfTools,nbOfLastWeekTools, classifiedVotes[t].votes);
                 note = note + vote.current;
                 if(vote.lastweek !== null){
                     lastWeekNote = lastWeekNote + vote.lastweek;
+                } else {
+                    lastWeekNote = null;
                 }
+
+                console.log(tool.name,"vote.current",vote.current, "vote.lastweek", vote.lastweek);
             }
         }
+
         var notes = { current:note, lastweek:lastWeekNote };
         return notes;
     }
 
-    function calculateVoteValues(nbOfTools,nbOfLastWeekTools, vote){
-        var tempNote = nbOfTools+1 - vote.pos;
-        var lastWeekTempNote = nbOfLastWeekTools+1 - vote.pos;
+    function calculateVoteValues(nbOfTools,nbOfLastWeekTools, voteArray){
+        var tempNote =0;
+        var tempLastWeekMostRecent = 0;
+        var tempDateLastWeekMostRecent = 0;
+        for(var t=0;t < voteArray.length; t++){
+            if(voteArray[t].current){
+                tempNote = nbOfTools+1 - voteArray[t].pos;
+            } else if( !ifExistedLastWeek( voteArray[t].time )){
+                var moreRecentLastVote = moreRecent(voteArray[t].time, tempDateLastWeekMostRecent);
+                if ( moreRecentLastVote ){
+                    tempDateLastWeekMostRecent = voteArray[t].time;
+                    tempLastWeekMostRecent = voteArray[t].pos;
+                }
+            } else {
 
-        if( new Date(vote.time) > new Date(now - milliSecondSinceLastWeek) ){
-            lastWeekTempNote = null;
+            }
         }
 
-        var voteValues = { current:tempNote, lastweek:lastWeekTempNote };
+        var voteValues = {};
+        if( tempDateLastWeekMostRecent !== 0 ){
+            lastWeekTempNote = null;
+            var lastWeekTempNote = nbOfLastWeekTools+1 - tempLastWeekMostRecent;
+            console.log("calculateVoteValues",tempNote, lastWeekTempNote,  tempDateLastWeekMostRecent);
+
+           voteValues = { current:tempNote, lastweek:lastWeekTempNote };
+        } else {
+            console.log("calculateVoteValues",tempNote, "noPreviousVote",  tempDateLastWeekMostRecent, tempLastWeekMostRecent);
+            voteValues = { current:tempNote, lastweek:tempNote };
+        }
+
         return voteValues;
     }
 
     function checkStatus(tool, note, lastWeekNote){
         var status = "normal";
 
-        if( new Date( tool.createdtime  ) < new Date(now - milliSecondSinceLastWeek)){
+        if( lastWeekNote !== null ){
+            if( ifExistedLastWeek( tool.createdtime ) ){
 
-            if(note-4 > lastWeekNote){
-                status = "hot";
-            }
-            if(note+4 < lastWeekNote){
-                status = "cold";
+                if(note-4 > lastWeekNote){
+                    status = "hot";
+                }
+                if(note+4 < lastWeekNote){
+                    status = "cold";
+                }
             }
         }
 
@@ -278,7 +338,7 @@ module.exports = function(app){
 
         var vars = { cat:cat, votes:votes };
         var process = function(array, x){
-            array.push({ id:x.id, pos:x.pos, user:x.user });
+            array.push({ id:x.id, pos:x.pos, user:x.user, current:1 });
         }
         var complete = function(userId, array, next, vars){
 
@@ -351,7 +411,6 @@ module.exports = function(app){
             if(previousTools[y]){
                 if(previousTools[y].id.toString() === currentTools[currentPosition].id.toString()){
 
-
                     var highlight = comparePositions(userId, previousTools[y].id, (currentPosition+1 - previousTools[y].pos) );
                     if(highlight.length > 0){
                         highlights.push( highlight );
@@ -412,41 +471,35 @@ module.exports = function(app){
         cb(userId);
     }
 
+    function clearCurrentUserVotes(userId, cat, cb){
+
+
+        app.db_middleware.update(app.votes, [{ cat: parseInt(cat), user:userId },{ $set: { current:0 }}, false, true], null, cb);
+    }
     /* End functions for voting */
 
 
-    function approuveCat(userId, cat, next, next){
+    function approuveCat(userId, cat, next){
 
-        var vars = { userId:userId, cat:cat, next:next}
+        var vars = { userId:userId, cat:cat, next:next }
         var cb = function(vars){
 
             var userId = vars.userId;
             var cat = vars.cat;
+            var next2 = vars.next;
 
-            var cb2 = function(userId, cat, next){
-                next(cat);
+            var cb2 = function(){
+                next2(cat);
             }
 
             app.functions.getData(userId, cb2);
         }
 
-        app.db_middleware.update(app.categories, { id: parseInt(cat) },{ $set: { approved:1 }}, vars, cb);
-        app.categories.update({ id: parseInt(cat) },{ $set: { approved:1 }}, null, cb);
+        app.db_middleware.update(app.categories, [{ id: parseInt(cat) },{ $set: { approved:1 }}, false, false], vars, cb);
 
     }
 
     /* functions for socket.io */
-    function emitVotesHighlight(userId, change, name, position){
-        socketEmit("vote", userId, app.utils.getUsername(userId) +" has just "+change+" '"+ name +"' of "+ position +" positions" );
-    }
-
-    function clearCurrentUserVotes(userId, cat, cb){
-
-        app.db_middleware.remove(app.votes, { cat:parseInt(cat), user:userId });
-        cb();
-
-    }
-
     function saveVotes(userId, votes, cat){
         for(var i=0; i < votes.length; i++ ){
 
@@ -455,7 +508,8 @@ module.exports = function(app){
                 pos: (i+1),
                 cat:parseInt(cat),
                 user:userId,
-                time:now
+                time:now,
+                current:1
             });
 
             app.db_middleware.insert(app.votes, {
@@ -463,10 +517,17 @@ module.exports = function(app){
                                                     pos: (i+1),
                                                     cat:parseInt(cat),
                                                     user:userId,
-                                                    time:now
+                                                    time:now,
+                                                    current:1
                                                 });
         }
     }
+
+    function emitVotesHighlight(userId, change, name, position){
+        socketEmit("vote", userId, app.utils.getUsername(userId) +" has just "+change+" '"+ name +"' of "+ position +" positions" );
+    }
+
+
 
     var socketInitiated = 0;
     var socketConnection;

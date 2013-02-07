@@ -20,7 +20,8 @@
                 <a href="/auth/facebook">Facebook</a> |
                 <a href="/auth/google">Google</a> |
                 <a href="/auth/linkedin">LinkedIn</a> |
-                <a href="/auth/github">GitHub</a>
+                <a href="/auth/github">GitHub</a> |
+                <a href="/auth/yammer">Yammer</a>
 			</p>
 		<% } else { %>
 		<div id="container" <% if (view=="user" && !user.admin) { %> class="enhance connected" data-enhance="connected" data-user-id="<%= user.id %>"<% } %><% if (user.admin) { %> class="enhance admin" data-enhance="admin"<% } %>>

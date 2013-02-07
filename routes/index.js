@@ -65,7 +65,7 @@ module.exports = function(app){
 
         var userId = app.utils.getUserId(req.user);
 
-        app.utils.logoutUser(userId, cb);
+        app.utils.logOutUser(userId, cb);
 
     }
 

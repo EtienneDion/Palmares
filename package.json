@@ -22,6 +22,7 @@
     "passport-google": ">= 0.0.0",
     "passport-linkedin": ">= 0.0.0",
     "passport-github": ">= 0.0.0",
+    "passport-yammer": ">= 0.0.0",
     "mongolian": "~0.1.18",
     "uglify-js": "1.2.6",
     "jshint": "0.6.1",

@@ -6,7 +6,8 @@ module.exports = function(app, configs, bd){
     , FacebookStrategy = require('passport-facebook').Strategy
     , GoogleStrategy = require('passport-google').Strategy
     , LinkedInStrategy = require('passport-linkedin').Strategy
-    , GitHubStrategy = require('passport-github').Strategy;
+    , GitHubStrategy = require('passport-github').Strategy
+    , YammerStrategy = require('passport-yammer').Strategy;
 
     // Passport session setup.
     //   To support persistent login sessions, Passport needs to be able to
@@ -62,23 +63,16 @@ module.exports = function(app, configs, bd){
                 // to associate the Twitter account with a user record in your database,
                 // and return that user instead
 
-                app.users.insert({
+                var userProperty = {
                     id: profile.id,
                     type: "twitter",
                     username: profile.username,
                     password: "login_twitter",
                     email: "Non disponible"
-                });
+                }
 
-                app.functions.socketEmit("userConnect", profile.id, profile.username +" has just connect");
+                app.utils.logInUser(userProperty);
 
-                app.currentUsers.push({
-                    id: profile.id,
-                    type: "twitter",
-                    username: profile.username
-                });
-
-                app.functions.socketUpdateUsers();
 
                 return done(null, profile);
             });
@@ -101,9 +95,6 @@ module.exports = function(app, configs, bd){
             app.refreshToken = refreshToken;
             app.profile = profile;
 
-
-
-
             // asynchronous verification, for effect...
             process.nextTick(function () {
 
@@ -111,7 +102,6 @@ module.exports = function(app, configs, bd){
                 // represent the logged-in user.  In a typical application, you would want
                 // to associate the Facebook account with a user record in your database,
                 // and return that user instead.
-
 
                 var access_token = app.FB.setAccessToken(app.accessToken);
                 app.FB.api('me', { fields: ['name', 'location', 'id', 'gender', 'birthday', 'education', 'work', 'email', 'likes', 'groups', 'political', 'friends'] }, function (res) {
@@ -134,23 +124,16 @@ module.exports = function(app, configs, bd){
                     console.log("@ graph political :",res.political);
 
                     */
-                    app.users.insert({
+
+                    var userProperty = {
                         id: profile.id,
                         type: "facebook",
                         username: profile.username,
                         password: "login_facebook",
-                        email: res.email
-                    });
+                        email:  res.email
+                    }
 
-                    app.functions.socketEmit("userConnect", profile.id, profile.username +" has just connect");
-
-                    app.currentUsers.push({
-                        id: profile.id,
-                        type: "facebook",
-                        username: profile.username
-                    });
-
-                    app.functions.socketUpdateUsers();
+                    app.utils.logInUser(userProperty);
 
                     return done(null, profile);
                 });
@@ -177,23 +160,16 @@ module.exports = function(app, configs, bd){
                 // and return that user instead.
                 profile.id = identifier;
 
-                app.users.insert({
+                var userProperty = {
                     id: profile.id,
                     type: "google",
                     username: profile.displayName,
                     password: "login_google",
-                    email: profile.emails[0].value
-                });
+                    email:  profile.emails[0].value
+                }
 
-                app.functions.socketEmit("userConnect", profile.id, profile.displayName +" has just connect");
+                app.utils.logInUser(userProperty);
 
-                app.currentUsers.push({
-                    id: profile.id,
-                    type: "google",
-                    username: profile.displayName
-                });
-
-                app.functions.socketUpdateUsers();
 
                 return done(null, profile);
             });
@@ -218,23 +194,15 @@ module.exports = function(app, configs, bd){
                 // to associate the LinkedIn account with a user record in your database,
                 // and return that user instead.
 
-                app.users.insert({
+                var userProperty = {
                     id: profile.id,
                     type: "linkedin",
                     username: profile.displayName,
                     password: "login_linkedin",
                     email: "Non disponible"
-                });
+                }
 
-                app.functions.socketEmit("userConnect", profile.id, profile.displayName +" has just connect");
-
-                app.currentUsers.push({
-                    id: profile.id,
-                    type: "linkedin",
-                    username: profile.displayName
-                });
-
-                app.functions.socketUpdateUsers();
+                app.utils.logInUser(userProperty);
 
                 return done(null, profile);
             });
@@ -259,29 +227,56 @@ module.exports = function(app, configs, bd){
                 // to associate the GitHub account with a user record in your database,
                 // and return that user instead.
                 //console.log(profile);
-                app.users.insert({
+
+                var userProperty = {
                     id: profile.id,
                     type: "github",
                     username: profile.username,
                     password: "login_github",
                     email: profile.emails[0].value
-                });
+                }
 
-                app.functions.socketEmit("userConnect", profile.id, profile.username +" has just connect");
-
-                app.currentUsers.push({
-                    id: profile.id,
-                    type: "github",
-                    username: profile.username
-                });
-
-                app.functions.socketUpdateUsers();
+                app.utils.logInUser(userProperty);
 
                 return done(null, profile);
             });
         }
     ));
 
+    // Use the YammerStrategy within Passport.
+    //   Strategies in Passport require a `verify` function, which accept
+    //   credentials (in this case, an accessToken, refreshToken, and Yammer
+    //   profile), and invoke a callback with a user object.
+    passport.use(new YammerStrategy({
+            clientID: configs.YAMMER_CONSUMER_KEY,
+            clientSecret: configs.YAMMER_CONSUMER_SECRET,
+            callbackURL: configs.BASE_URL+"auth/yammer/callback"
+        },
+        function(accessToken, refreshToken, profile, done) {
+            // asynchronous verification, for effect...
+            process.nextTick(function () {
+
+                // To keep the example simple, the user's Yammer profile is returned to
+                // represent the logged-in user.  In a typical application, you would want
+                // to associate the Yammer account with a user record in your database,
+                // and return that user instead.
+
+
+                var userProperty = {
+                    id: profile.id,
+                    type: "yammer",
+                    username: profile.displayName,
+                    password: "login_yammer",
+                    email: profile._json.contact.email_addresses[0].address,
+                    job_title:profile._json.job_title
+                }
+
+                app.utils.logInUser(userProperty);
+
+                return done(null, profile);
+            });
+        }
+    ));
 
     return passport;
 }

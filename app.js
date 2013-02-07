@@ -21,17 +21,25 @@ app.eventEmitter = eventEmitter;
 // Get database
 bd = mongolian.db(configs.DB);
 bd.auth(configs.DB_USER, configs.DB_PASS);
-app.db_middleware = require('./db_middleware')(app, bd);
+app.db_middleware = require('./functions/database.js')(app, bd);
 
 var users = app.db_middleware.getCollection("users");
 app.users = users;
 app.currentUsers=[];
 // functions
-app.utils = require('./utils')(app);
-app.functions = require('./functions')(app);
+app.utils = require('./functions/utils.js')(app);
+app.functions = require('./functions/functions.js')(app);
 // auth
-var passport = require('./passport')(app, configs);
+var passport = require('./functions/passport.js')(app, configs);
 //console.log(app);
+
+
+/* Clear All Votes  */
+app.votes = app.db_middleware.getCollection("votes");
+app.db_middleware.remove(app.votes, {});
+console.log(" ---- ---- ----- ----- ----- ---- ----");
+console.log(" ---- ---- All votes Cleared ---- ----");
+console.log(" ---- ---- ----- ----- ----- ---- ----");
 
 
 // configure Express
@@ -80,12 +88,14 @@ app.get('/auth/facebook', passport.authenticate('facebook',
     { scope: ['user_birthday','user_education_history', 'user_work_history', 'email','user_likes','user_groups','read_friendlists','user_religion_politics' ] }),
     routes.authRedirect);
 app.get('/auth/facebook/callback', passport.authenticate('facebook', { failureRedirect: '/', failureFlash: true }), routes.indexPost);
-app.get('/auth/google', passport.authenticate('google', { failureRedirect: '/login' }), routes.indexPost);
-app.get('/auth/google/return', passport.authenticate('google', { failureRedirect: '/login' }), routes.indexPost);
+app.get('/auth/google', passport.authenticate('google'), routes.indexPost);
+app.get('/auth/google/return', passport.authenticate('google', { failureRedirect: '/', failureFlash: true }), routes.indexPost);
 app.get('/auth/linkedin', passport.authenticate('linkedin'), routes.authRedirect);
-app.get('/auth/linkedin/callback', passport.authenticate('linkedin', { failureRedirect: '/login' }), routes.indexPost);
+app.get('/auth/linkedin/callback', passport.authenticate('linkedin', { failureRedirect: '/', failureFlash: true }), routes.indexPost);
 app.get('/auth/github', passport.authenticate('github'), routes.authRedirect);
-app.get('/auth/github/callback', passport.authenticate('github', { failureRedirect: '/login' }), routes.indexPost);
+app.get('/auth/github/callback', passport.authenticate('github', { failureRedirect: '/', failureFlash: true }), routes.indexPost);
+app.get('/auth/yammer', passport.authenticate('yammer'), routes.authRedirect);
+app.get('/auth/yammer/callback', passport.authenticate('yammer', { failureRedirect: '/login', failureFlash: true }), routes.indexPost);
 //logout
 app.get('/logout', app.utils.ensureAuthenticated, routes.logOut);
 

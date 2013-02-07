@@ -11,6 +11,12 @@ module.exports = function(app, bd){
         forEach:forEach
     };
 
+    /*
+    *
+    *  TODO : Prevent injections
+    *
+     */
+
     function getCollection(collection){
        var data = bd.collection(collection);
        return data;
@@ -37,7 +43,12 @@ module.exports = function(app, bd){
     }
 
     function update(table, param, vars, cb){
-        table.update(param, vars, cb);
+        var next = function(error, value){
+            console.log("UPDATE Error : ",error, value);
+            cb(vars);
+        }
+
+        table.update(param[0],param[1], param[2], param[3], next);
     }
 
     function remove(table, param){

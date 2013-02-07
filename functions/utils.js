@@ -9,8 +9,9 @@ module.exports = function(app){
         findById:findById,
         getUsername:getUsername,
         findByUsername:findByUsername,
+        logInUser:logInUser,
+        logOutUser:logOutUser,
         ensureAuthenticated:ensureAuthenticated,
-        logoutUser:logoutUser,
         sortByProp:sortByProp,
         getCatName:getCatName,
         getToolName:getToolName,
@@ -75,12 +76,28 @@ module.exports = function(app){
 
     }
 
-    function ensureAuthenticated(req, res, next) {
-        if (req.isAuthenticated()) { return next(); }
-        res.redirect('/login')
+    function logInUser(user){
+
+        app.db_middleware.insert(app.users, {
+            id: user.id,
+            type: user.type,
+            username: user.username,
+            password: user.password,
+            email: user.email
+        });
+
+        app.functions.socketEmit("userConnect", user.id, user.username +" has just connect");
+
+        app.currentUsers.push({
+            id: user.id,
+            type: user.type,
+            username: user.username
+        });
+
+        app.functions.socketUpdateUsers();
     }
 
-    function logoutUser(id, cb){
+    function logOutUser(id, cb){
         for(var i=0;i<app.currentUsers.length;i++){
             if(app.currentUsers[i].id.toString() === id.toString()){
                 app.currentUsers.splice(i,1);
@@ -89,7 +106,14 @@ module.exports = function(app){
         cb();
     }
 
-    //sortByProp
+    function ensureAuthenticated(req, res, next) {
+        if (req.isAuthenticated()) { return next(); }
+        res.redirect('/login')
+    }
+
+
+
+    //sort Array By Property
     function sortByProp(array, p){
         return array.sort(function(a,b){
             return (a[p] < b[p]) ? 1 : (a[p] > b[p]) ? -1 : 0;
