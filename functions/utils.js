@@ -1,7 +1,7 @@
 module.exports = function(app){
 
     now = new Date();
-    milliSecondSinceLastWeek = 10000; //604800000
+    milliSecondSinceLastWeek = app.configs.milliSecondSinceLastWeek;
 
     return {
         //functions
@@ -13,6 +13,8 @@ module.exports = function(app){
         logOutUser:logOutUser,
         ensureAuthenticated:ensureAuthenticated,
         sortByProp:sortByProp,
+        giveToolsPodium:giveToolsPodium,
+        sortTools:sortTools,
         getCatName:getCatName,
         getToolName:getToolName,
         getUserId:getUserId
@@ -118,6 +120,36 @@ module.exports = function(app){
         return array.sort(function(a,b){
             return (a[p] < b[p]) ? 1 : (a[p] > b[p]) ? -1 : 0;
         });
+    }
+
+    function giveToolsPodium(currentTools){
+        currentTools = sortByProp(currentTools, "note");
+
+        for(var i=0;i<currentTools.length;i++){
+            currentTools[i].podium = "";
+        }
+
+        if( currentTools.length > 3){
+            currentTools[0].podium = "first";
+            currentTools[1].podium = "second";
+            currentTools[2].podium = "third";
+        }
+
+
+        return currentTools;
+    }
+
+    function sortTools(userId, currentTools){
+
+        currentTools = giveToolsPodium(currentTools);
+
+        if(userId !== null){
+            currentTools = sortByProp(currentTools, "mynote");
+        } else {
+            currentTools = sortByProp(currentTools, "note");
+        }
+
+        return currentTools;
     }
 
     function getCatName(cat){

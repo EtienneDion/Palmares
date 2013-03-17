@@ -14,6 +14,11 @@ var express = require('express')
   , events = require('events')
   , eventEmitter = new events.EventEmitter;
 
+app.configs.milliSecondSinceLastWeek = configs.milliSecondSinceLastWeek;
+app.configs.raiseToBeHot = configs.raiseToBeHot;
+app.configs.lowerToBeCold = configs.lowerToBeCold;
+
+
 app.FB =FB;
 app.io = io;
 app.eventEmitter = eventEmitter;
@@ -35,11 +40,11 @@ var passport = require('./functions/passport.js')(app, configs);
 
 
 /* Clear All Votes  */
-app.votes = app.db_middleware.getCollection("votes");
-app.db_middleware.remove(app.votes, {});
-console.log(" ---- ---- ----- ----- ----- ---- ----");
-console.log(" ---- ---- All votes Cleared ---- ----");
-console.log(" ---- ---- ----- ----- ----- ---- ----");
+//app.votes = app.db_middleware.getCollection("votes");
+//app.db_middleware.remove(app.votes, {});
+//console.log(" ---- ---- ----- ----- ----- ---- ----");
+//console.log(" ---- ---- All votes Cleared ---- ----");
+//console.log(" ---- ---- ----- ----- ----- ---- ----");
 
 
 // configure Express

@@ -1,7 +1,7 @@
 .clearfix{*zoom:1;}.clearfix:before,.clearfix:after{display:table;content:"";line-height:0;}
 .clearfix:after{clear:both;}
 .hide-text{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0;}
-.field.error label{color:red;}
+@font-face{font-family:'MyWebFont';src:url('WebFont.eot');src:url('WebFont.eot?#iefix') format('embedded-opentype'),url('WebFont.woff') format('woff'),url('WebFont.ttf') format('truetype'),url('WebFont.svg#webfont') format('svg');}.field.error label{color:red;}
 .field.error input{border:1px solid red;}
 .field.error .errorMsg{color:red;}
 form{clear:both;}

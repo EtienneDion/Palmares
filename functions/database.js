@@ -44,7 +44,7 @@ module.exports = function(app, bd){
 
     function update(table, param, vars, cb){
         var next = function(error, value){
-            console.log("UPDATE Error : ",error, value);
+            //console.log("UPDATE Error : ",error, value);
             cb(vars);
         }
 
